@@ -136,8 +136,20 @@ const Footer = () => {
           {/* School Info */}
           <div className="lg:col-span-2">
             <div className="flex items-start space-x-4 mb-6">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary-brown font-bold text-xl shadow-lg">
-                SPC
+              {/* Logo Container - Replace with your actual logo */}
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-lg">
+                  {/* Replace this div with your logo image */}
+                  <img 
+                    src="/logo.jpg" 
+                    alt={language === 'fr' ? 'Logo École Saint Pierre Claver' : 'Saint Peter Claver School Logo'}
+                    className="w-full h-full object-contain p-1"
+                  />
+                  {/* Fallback text if image fails to load */}
+                  <span className="text-primary-brown font-bold text-xs text-center">
+                    {language === 'fr' ? 'SPC' : 'SPC'}
+                  </span>
+                </div>
               </div>
               <div>
                 <h3 className="text-2xl font-bold mb-2">

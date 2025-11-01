@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, ChevronRight, Phone, MapPin, Mail, Clock, User, BookOpen, Languages, GraduationCap, Users } from 'lucide-react'
+import { Menu, X, ChevronRight, Phone, MapPin, Mail, Clock, User, BookOpen, Languages, GraduationCap, Users, Watch } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { content } from '../data/content'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -9,6 +9,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [currentTime, setCurrentTime] = useState('')
   const { language } = useLanguage()
   const location = useLocation()
   const t = content[language]
@@ -20,12 +21,30 @@ const Header = () => {
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY
-      setIsScrolled(scrollTop > 100) // Increased threshold for double navbar
+      setIsScrolled(scrollTop > 50)
     }
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Update current time
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date()
+      const timeString = now.toLocaleTimeString(language === 'fr' ? 'fr-FR' : 'en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: language !== 'fr'
+      })
+      setCurrentTime(timeString)
+    }
+
+    updateTime()
+    const interval = setInterval(updateTime, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [language])
 
   // Top bar navigation - Quick links and essential info
   const topNavigation = {
@@ -46,8 +65,8 @@ const Header = () => {
         icon: BookOpen
       },
       { 
-        path: '/parents', 
-        label: language === 'fr' ? 'Espace Parents' : 'Parents Portal',
+        path: '/parents-portal', 
+        label: language === 'fr' ? 'Portail Parents' : 'Parents Portal',
         icon: Users
       }
     ]
@@ -198,7 +217,7 @@ const Header = () => {
         <div className="container-custom">
           <div className="flex flex-col lg:flex-row justify-between items-center space-y-2 lg:space-y-0">
             {/* Contact Information */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 lg:gap-6 text-xs lg:text-sm">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 lg:gap-6 text-xs">
               <div className="flex items-center space-x-2">
                 <Phone size={12} className="flex-shrink-0" />
                 <span>+233 24 XXX XXXX</span>
@@ -215,13 +234,19 @@ const Header = () => {
 
             {/* Quick Links & Language Switcher */}
             <div className="flex items-center space-x-4 lg:space-x-6">
+              {/* Live Clock */}
+              <div className="hidden md:flex items-center space-x-2 bg-primary-brown/80 px-3 py-1 rounded-full border border-primary-cream/20">
+                <Watch size={12} className="text-primary-cream" />
+                <span className="text-primary-cream text-xs font-medium">{currentTime}</span>
+              </div>
+
               {/* Quick Links */}
               <div className="hidden lg:flex items-center space-x-4">
                 {topNavigation.quickLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className="flex items-center space-x-1 text-primary-cream-light hover:text-white transition-colors duration-200 text-xs font-medium"
+                    className="flex items-center space-x-1 text-primary-cream-light hover:text-white transition-colors duration-200 text-xs font-medium hover:bg-primary-brown/50 px-2 py-1 rounded"
                   >
                     <link.icon size={12} />
                     <span>{link.label}</span>
@@ -239,24 +264,24 @@ const Header = () => {
       </div>
 
       {/* Main Navigation Bar */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 bg-white border-b border-gray-200 ${
-        isScrolled ? 'shadow-xl' : 'shadow-lg'
+      <header className={`sticky top-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b ${
+        isScrolled ? 'shadow-xl border-gray-200' : 'shadow-lg border-gray-100'
       }`}>
         <div className="container-custom">
           {/* Main Header Row */}
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-3">
             {/* Logo & School Name */}
             <Link 
               to="/" 
-              className="flex items-center space-x-4 group flex-shrink-0"
+              className="flex items-center space-x-3 group flex-shrink-0"
               onClick={() => setIsMenuOpen(false)}
             >
               {/* Professional Logo Container */}
-              <div className="flex items-center justify-center w-16 h-16 bg-white rounded-xl border-2 border-primary-brown/10 shadow-lg group-hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div className="flex items-center justify-center w-12 h-12 bg-white rounded-lg border border-gray-200 shadow-md group-hover:shadow-lg transition-all duration-300 overflow-hidden">
                 <img 
                   src={logoImage} 
                   alt={language === 'fr' ? "Logo École Saint Pierre Claver" : "Saint Peter Claver School Logo"}
-                  className="w-12 h-12 object-contain"
+                  className="w-10 h-10 object-contain p-1"
                   onError={(e) => {
                     e.target.style.display = 'none'
                     const fallback = e.target.nextSibling
@@ -265,17 +290,17 @@ const Header = () => {
                   }}
                 />
                 {/* Elegant Fallback */}
-                <div className="hidden w-12 h-12 bg-gradient-to-br from-primary-brown to-primary-dark rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-inner">
+                <div className="hidden w-10 h-10 bg-gradient-to-br from-primary-brown to-primary-dark rounded flex items-center justify-center text-white font-bold text-sm shadow-inner">
                   SPC
                 </div>
               </div>
               
               {/* School Name */}
               <div className="flex flex-col">
-                <h1 className="text-2xl font-bold text-primary-brown leading-tight tracking-tight">
+                <h1 className="text-xl font-bold text-primary-brown leading-tight tracking-tight">
                   {language === 'fr' ? 'École Saint Pierre Claver' : 'Saint Peter Claver School'}
                 </h1>
-                <p className="text-sm text-gray-600 font-medium mt-1 tracking-wide">
+                <p className="text-xs text-gray-600 font-medium mt-0.5 tracking-wide">
                   {language === 'fr' ? 'Accra, Ghana - Excellence depuis 1970' : 'Accra, Ghana - Excellence since 1970'}
                 </p>
               </div>
@@ -289,9 +314,9 @@ const Header = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`px-4 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm flex items-center space-x-2 ${
+                    className={`px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 whitespace-nowrap text-sm flex items-center space-x-2 ${
                       location.pathname === item.path
-                        ? 'bg-primary-brown text-white shadow-lg'
+                        ? 'bg-primary-brown text-white shadow-md'
                         : 'text-gray-700 hover:bg-primary-cream hover:text-primary-brown'
                     }`}
                   >
@@ -309,7 +334,7 @@ const Header = () => {
                   >
                     <Link
                       to={navItem.path}
-                      className={`px-4 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm flex items-center space-x-2 group ${
+                      className={`px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 whitespace-nowrap text-sm flex items-center space-x-2 group ${
                         isActivePath(navItem.path)
                           ? 'bg-primary-cream text-primary-brown'
                           : 'text-gray-700 hover:bg-primary-cream hover:text-primary-brown'
@@ -321,13 +346,13 @@ const Header = () => {
 
                     {/* Mega Dropdown Menu */}
                     {activeDropdown === key && (
-                      <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 py-4 z-50 animate-in fade-in-0 zoom-in-95">
+                      <div className="absolute top-full left-0 mt-1 w-80 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-3 z-50 animate-in fade-in-0 zoom-in-95">
                         <div className="space-y-1">
                           {navItem.items.map((subItem, index) => (
                             <div key={subItem.path}>
                               <Link
                                 to={subItem.path}
-                                className={`flex items-center justify-between px-4 py-3 transition-all duration-300 group text-sm mx-2 rounded-xl ${
+                                className={`flex items-center justify-between px-4 py-2.5 transition-all duration-300 group text-sm mx-2 rounded-lg ${
                                   subItem.highlight 
                                     ? 'bg-gradient-to-r from-primary-brown to-primary-dark text-white hover:from-primary-dark hover:to-primary-brown' 
                                     : 'text-gray-700 hover:bg-primary-cream hover:text-primary-brown'
@@ -339,7 +364,7 @@ const Header = () => {
                                     {subItem.label}
                                   </span>
                                   {subItem.description && (
-                                    <span className={`text-xs mt-1 ${
+                                    <span className={`text-xs mt-0.5 ${
                                       subItem.highlight ? 'text-primary-cream' : 'text-gray-500'
                                     }`}>
                                       {subItem.description}
@@ -367,9 +392,9 @@ const Header = () => {
                 {/* Contact Button */}
                 <Link
                   to="/contact"
-                  className={`px-4 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm border flex items-center space-x-2 ${
+                  className={`px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 whitespace-nowrap text-sm border flex items-center space-x-2 ${
                     location.pathname === '/contact'
-                      ? 'bg-primary-brown text-white border-primary-brown shadow-lg'
+                      ? 'bg-primary-brown text-white border-primary-brown shadow-md'
                       : 'text-primary-brown border-primary-brown hover:bg-primary-brown hover:text-white'
                   }`}
                 >
@@ -384,20 +409,32 @@ const Header = () => {
               {/* Apply Now Button */}
               <Link
                 to="/apply"
-                className="px-6 py-3 bg-gradient-to-r from-primary-brown to-primary-dark text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 whitespace-nowrap flex items-center space-x-2"
+                className="px-5 py-2.5 bg-gradient-to-r from-primary-brown to-primary-dark text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 whitespace-nowrap flex items-center space-x-2"
               >
                 <User size={16} />
                 <span>{language === 'fr' ? 'Postuler' : 'Apply Now'}</span>
               </Link>
+
+              {/* Mobile Clock for larger screens */}
+              <div className="hidden xl:flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg border border-gray-200">
+                <Watch size={14} className="text-primary-brown" />
+                <span className="text-gray-700 text-sm font-medium">{currentTime}</span>
+              </div>
             </div>
 
             {/* Mobile menu button */}
             <div className="xl:hidden flex items-center space-x-3">
+              {/* Mobile Clock */}
+              <div className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg border border-gray-200">
+                <Watch size={14} className="text-primary-brown" />
+                <span className="text-gray-700 text-sm font-medium">{currentTime}</span>
+              </div>
+
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-3 rounded-xl bg-primary-cream text-primary-brown hover:bg-primary-brown hover:text-white transition-colors duration-300 shadow-lg"
+                className="p-2.5 rounded-lg bg-primary-cream text-primary-brown hover:bg-primary-brown hover:text-white transition-colors duration-300 shadow-md"
               >
-                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
           </div>
@@ -406,18 +443,18 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="xl:hidden border-t border-gray-200 bg-white/95 backdrop-blur-md shadow-2xl">
-            <div className="py-6 space-y-3 max-h-[80vh] overflow-y-auto">
+            <div className="py-4 space-y-2 max-h-[80vh] overflow-y-auto">
               {/* Quick Links for Mobile */}
-              <div className="px-6 pb-4 border-b border-gray-200">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="px-4 pb-3 border-b border-gray-200">
+                <div className="grid grid-cols-2 gap-2">
                   {topNavigation.quickLinks.map((link) => (
                     <Link
                       key={link.path}
                       to={link.path}
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center space-x-2 p-3 rounded-lg bg-gray-50 hover:bg-primary-cream hover:text-primary-brown transition-all duration-300 text-sm font-medium"
+                      className="flex items-center space-x-2 p-2 rounded-lg bg-gray-50 hover:bg-primary-cream hover:text-primary-brown transition-all duration-300 text-xs font-medium"
                     >
-                      <link.icon size={16} />
+                      <link.icon size={14} />
                       <span className="text-xs">{link.label}</span>
                     </Link>
                   ))}
@@ -430,9 +467,9 @@ const Header = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`block px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-base text-center ${
+                  className={`block px-4 py-3 rounded-lg font-semibold transition-all duration-300 text-sm text-center ${
                     location.pathname === item.path
-                      ? 'bg-primary-brown text-white shadow-lg'
+                      ? 'bg-primary-brown text-white shadow-md'
                       : 'text-gray-700 hover:bg-primary-cream hover:text-primary-brown'
                   }`}
                 >
@@ -442,37 +479,37 @@ const Header = () => {
 
               {/* Main navigation items for mobile */}
               {Object.entries(mainNavigation).map(([key, navItem]) => (
-                <div key={key} className="space-y-2">
+                <div key={key} className="space-y-1">
                   <Link
                     to={navItem.path}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-base ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-semibold transition-all duration-300 text-sm ${
                       isActivePath(navItem.path)
                         ? 'bg-primary-cream text-primary-brown'
                         : 'text-gray-700 hover:bg-primary-cream hover:text-primary-brown'
                     }`}
                   >
-                    <navItem.icon size={18} />
+                    <navItem.icon size={16} />
                     <span>{navItem.label}</span>
                   </Link>
                   
                   {/* Mobile submenu */}
-                  <div className="ml-8 space-y-2 border-l-2 border-primary-cream pl-4">
+                  <div className="ml-6 space-y-1 border-l-2 border-primary-cream pl-3">
                     {navItem.items.map((subItem) => (
                       <Link
                         key={subItem.path}
                         to={subItem.path}
                         onClick={() => setIsMenuOpen(false)}
-                        className={`block px-4 py-3 transition-all duration-300 rounded-lg text-sm ${
+                        className={`block px-3 py-2 transition-all duration-300 rounded text-xs ${
                           subItem.highlight
-                            ? 'bg-gradient-to-r from-primary-brown to-primary-dark text-white font-semibold shadow-lg'
+                            ? 'bg-gradient-to-r from-primary-brown to-primary-dark text-white font-semibold shadow-md'
                             : 'text-gray-600 hover:bg-primary-cream hover:text-primary-brown'
                         }`}
                       >
                         <div className="flex flex-col">
                           <span>{subItem.label}</span>
                           {subItem.description && (
-                            <span className="text-xs text-gray-500 mt-1">
+                            <span className="text-xs text-gray-500 mt-0.5">
                               {subItem.description}
                             </span>
                           )}
@@ -484,26 +521,26 @@ const Header = () => {
               ))}
 
               {/* Contact and Apply buttons for mobile */}
-              <div className="space-y-3 px-6 pt-4 border-t border-gray-200">
+              <div className="space-y-2 px-4 pt-3 border-t border-gray-200">
                 <Link
                   to="/contact"
                   onClick={() => setIsMenuOpen(false)}
-                  className={`block w-full px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-base text-center border flex items-center justify-center space-x-2 ${
+                  className={`block w-full px-4 py-3 rounded-lg font-semibold transition-all duration-300 text-sm text-center border flex items-center justify-center space-x-2 ${
                     location.pathname === '/contact'
                       ? 'bg-primary-brown text-white border-primary-brown'
                       : 'text-primary-brown border-primary-brown hover:bg-primary-brown hover:text-white'
                   }`}
                 >
-                  <MapPin size={18} />
+                  <MapPin size={16} />
                   <span>{t.nav.contact}</span>
                 </Link>
                 
                 <Link
                   to="/apply"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block w-full px-6 py-4 bg-gradient-to-r from-primary-brown to-primary-dark text-white rounded-xl font-semibold text-base text-center shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                  className="block w-full px-4 py-3 bg-gradient-to-r from-primary-brown to-primary-dark text-white rounded-lg font-semibold text-sm text-center shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
                 >
-                  <User size={18} />
+                  <User size={16} />
                   <span>{language === 'fr' ? 'Postuler Maintenant' : 'Apply Now'}</span>
                 </Link>
               </div>

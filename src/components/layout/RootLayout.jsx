@@ -21,6 +21,7 @@ import Faculty from '../../pages/Faculty'
 import Apply from '../../pages/Apply'
 import LanguageCourses from '../../pages/LanguageCourses'
 import Portal from '../../pages/Portal'
+import ParentsPortal from '../../pages/ParentsPortal' // Add this import
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -210,7 +211,7 @@ const RootLayout = () => {
                 <LanguageCourses />
               </motion.div>
             } />
-            {/* Portal Route - Added */}
+            {/* Portal Route */}
             <Route path="/portal" element={
               <motion.div
                 initial="initial"
@@ -220,6 +221,18 @@ const RootLayout = () => {
                 transition={pageTransition}
               >
                 <Portal />
+              </motion.div>
+            } />
+            {/* Parents Portal Route - ADD THIS */}
+            <Route path="/parents-portal" element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <ParentsPortal />
               </motion.div>
             } />
           </Routes>
