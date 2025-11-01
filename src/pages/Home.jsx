@@ -10,6 +10,7 @@ const Home = () => {
   const { language } = useLanguage()
   const t = content[language]
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [progress, setProgress] = useState(0)
 
   // Professional school images for the hero carousel
   const heroImages = [
@@ -39,13 +40,53 @@ const Home = () => {
     }
   ]
 
-  // Auto-rotate slides every 5 seconds
+  // Programs data for the colorful bar
+  const programs = [
+    {
+      name: language === 'fr' ? 'Arts & Culture' : 'Arts & Culture',
+      color: 'from-purple-500 to-pink-500',
+      percentage: 35,
+      icon: '🎨',
+      description: language === 'fr' ? 'Expression créative et développement artistique' : 'Creative expression and artistic development'
+    },
+    {
+      name: language === 'fr' ? 'Sciences & Innovation' : 'Sciences & Innovation',
+      color: 'from-blue-500 to-cyan-500',
+      percentage: 40,
+      icon: '🔬',
+      description: language === 'fr' ? 'Recherche scientifique et pensée innovante' : 'Scientific research and innovative thinking'
+    },
+    {
+      name: language === 'fr' ? 'Centre de Langues' : 'Language Center',
+      color: 'from-green-500 to-emerald-500',
+      percentage: 25,
+      icon: '🌐',
+      description: language === 'fr' ? 'Maîtrise multilingue et compétences globales' : 'Multilingual mastery and global skills'
+    }
+  ]
+
+  // Auto-rotate slides every 5 seconds with progress tracking
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length)
+      setProgress(0) // Reset progress when slide changes
     }, 5000)
     return () => clearInterval(interval)
   }, [])
+
+  // Progress animation for the circular indicator
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          return 0
+        }
+        return prev + 1
+      })
+    }, 50) // Update every 50ms for smooth animation
+
+    return () => clearInterval(progressInterval)
+  }, [currentSlide])
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -71,6 +112,9 @@ const Home = () => {
     center: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: -100 }
   }
+
+  // Calculate the circumference for the circular progress (2 * π * r)
+  const circumference = 2 * Math.PI * 40 // radius of 40
 
   return (
     <div>
@@ -151,12 +195,51 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Circular Progress Indicator */}
+        <div className="absolute bottom-8 right-8 z-30 hidden lg:block">
+          <div className="relative w-24 h-24">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              {/* Background circle */}
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth="8"
+                fill="transparent"
+              />
+              {/* Progress circle */}
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="40"
+                stroke="white"
+                strokeWidth="8"
+                fill="transparent"
+                strokeLinecap="round"
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ 
+                  strokeDashoffset: circumference - (progress / 100) * circumference 
+                }}
+                transition={{ duration: 0.1 }}
+                strokeDasharray={circumference}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold">
+              {currentSlide + 1}/{heroImages.length}
+            </div>
+          </div>
+        </div>
+
         {/* Slide Indicators */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex space-x-3">
           {heroImages.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentSlide(index)}
+              onClick={() => {
+                setCurrentSlide(index)
+                setProgress(0)
+              }}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 currentSlide === index ? 'bg-white scale-125' : 'bg-white/50'
               }`}
@@ -188,15 +271,116 @@ const Home = () => {
         </motion.div>
       </section>
 
+      {/* Programs Distribution Bar */}
+      <section className="section-padding bg-white">
+        <div className="container-custom">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="section-title mb-4 text-center"
+          >
+            {language === 'fr' ? 'Nos Domaines d\'Excellence' : 'Our Areas of Excellence'}
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="section-subtitle mb-12 text-center"
+          >
+            {language === 'fr' 
+              ? 'Répartition de nos programmes académiques innovants'
+              : 'Distribution of our innovative academic programs'
+            }
+          </motion.p>
+
+          {/* Colorful Programs Bar */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
+          >
+            {/* Main Distribution Bar */}
+            <div className="flex h-16 rounded-2xl overflow-hidden shadow-lg mb-8">
+              {programs.map((program, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${program.percentage}%` }}
+                  transition={{ duration: 1.5, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                  className={`h-full bg-gradient-to-r ${program.color} relative group cursor-pointer hover:brightness-110 transition-all duration-300`}
+                  style={{ width: `${program.percentage}%` }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm lg:text-base">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {program.percentage}%
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Program Details */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {programs.map((program, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center group cursor-pointer"
+                >
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${program.color} flex items-center justify-center text-2xl text-white mb-4 mx-auto group-hover:scale-110 transition-transform duration-300`}>
+                    {program.icon}
+                  </div>
+                  <h3 className="font-bold text-lg text-gray-800 mb-2">
+                    {program.name}
+                  </h3>
+                  <div className={`text-2xl font-bold bg-gradient-to-r ${program.color} bg-clip-text text-transparent mb-2`}>
+                    {program.percentage}%
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {program.description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Additional Info */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              viewport={{ once: true }}
+              className="mt-8 text-center"
+            >
+              <p className="text-gray-600 italic">
+                {language === 'fr' 
+                  ? 'Notre approche équilibrée combine créativité, innovation et compétences linguistiques pour une éducation complète'
+                  : 'Our balanced approach combines creativity, innovation, and language skills for a comprehensive education'
+                }
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Quick Stats */}
-      <section className="section-padding bg-white relative">
+      <section className="section-padding bg-gradient-to-br from-primary-cream to-white relative">
         <div className="container-custom">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="section-title mb-16"
+            className="section-title mb-16 text-center"
           >
             {language === 'fr' ? 'Notre Héritage en Chiffres' : 'Our Legacy in Numbers'}
           </motion.h2>
@@ -215,7 +399,7 @@ const Home = () => {
                 viewport={{ once: true }}
                 className="group"
               >
-                <div className="bg-gradient-to-br from-primary-cream to-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 group-hover:scale-105 border border-primary-cream">
+                <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 group-hover:scale-105 border border-primary-cream">
                   <div className="text-4xl lg:text-5xl font-bold text-primary-brown mb-4">
                     <AnimatedCounter 
                       end={stat.number} 
@@ -235,14 +419,14 @@ const Home = () => {
       </section>
 
       {/* Features */}
-      <section className="section-padding bg-gradient-to-br from-primary-cream to-white relative">
+      <section className="section-padding bg-white relative">
         <div className="container-custom">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="section-title mb-4"
+            className="section-title mb-4 text-center"
           >
             {language === 'fr' ? 'Pourquoi Nous Choisir' : 'Why Choose Us'}
           </motion.h2>
@@ -251,7 +435,7 @@ const Home = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="section-subtitle mb-16"
+            className="section-subtitle mb-16 text-center"
           >
             {language === 'fr' 
               ? 'Découvrez ce qui fait de notre école un établissement d\'exception'
@@ -294,7 +478,7 @@ const Home = () => {
                 whileHover={{ scale: 1.05, y: -5 }}
                 className="group cursor-pointer"
               >
-                <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 p-8 h-full border border-gray-100">
+                <div className="bg-gradient-to-br from-primary-cream to-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 p-8 h-full border border-gray-100">
                   <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-3xl text-white mb-6 mx-auto group-hover:scale-110 transition-transform duration-500`}>
                     {feature.icon}
                   </div>

@@ -1,6 +1,7 @@
 ﻿import React from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAccessibility } from '../../contexts/AccessibilityContext' // Adjust path as needed
 import Header from '../Header'
 import Footer from '../Footer'
 import AnimatedBackground from '../AnimatedBackground'
@@ -43,9 +44,10 @@ const pageTransition = {
 
 const RootLayout = () => {
   const location = useLocation()
+  const { highContrast } = useAccessibility()
 
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className={`min-h-screen flex flex-col relative ${highContrast ? 'high-contrast' : ''}`}>
       <SEO />
       <AnimatedBackground />
       <Header />

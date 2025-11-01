@@ -197,3 +197,91 @@ body {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
+/* High Contrast Mode Styles */
+.high-contrast {
+  /* Override primary colors */
+  --color-primary-brown: #1e3a8a;
+  --color-primary-dark: #1e40af;
+  --color-primary-cream: #fef3c7;
+}
+
+.high-contrast .bg-primary-brown {
+  background-color: #1e3a8a !important;
+}
+
+.high-contrast .bg-primary-dark {
+  background-color: #1e40af !important;
+}
+
+.high-contrast .bg-primary-cream {
+  background-color: #fef3c7 !important;
+}
+
+.high-contrast .text-primary-brown {
+  color: #fef3c7 !important;
+}
+
+.high-contrast .text-primary-dark {
+  color: #fef3c7 !important;
+}
+
+.high-contrast .text-primary-cream {
+  color: #1e3a8a !important;
+}
+
+.high-contrast .bg-white {
+  background-color: #1e40af !important;
+}
+
+.high-contrast .text-white {
+  color: #fef3c7 !important;
+}
+
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-800 {
+  color: #fef3c7 !important;
+}
+
+.high-contrast .bg-gray-50,
+.high-contrast .bg-gray-100 {
+  background-color: #1e3a8a !important;
+}
+
+.high-contrast .border-gray-200,
+.high-contrast .border-gray-100 {
+  border-color: #fef3c7 !important;
+}
+
+/* Button styles */
+.high-contrast .btn-primary {
+  background-color: #fef3c7 !important;
+  color: #1e3a8a !important;
+  border-color: #fef3c7 !important;
+}
+
+.high-contrast .btn-primary:hover {
+  background-color: #fde68a !important;
+  color: #1e3a8a !important;
+}
+
+/* Card and section backgrounds */
+.high-contrast .bg-gradient-to-br.from-primary-cream.to-white,
+.high-contrast .bg-gradient-to-br.from-primary-cream {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a) !important;
+}
+
+.high-contrast .bg-gradient-to-r.from-primary-brown.to-primary-dark {
+  background: linear-gradient(90deg, #1e3a8a, #1e40af) !important;
+}
+
+/* Ensure good contrast for all elements */
+.high-contrast * {
+  border-color: #fef3c7 !important;
+}
+
+.high-contrast .shadow-lg,
+.high-contrast .shadow-xl {
+  box-shadow: 0 10px 25px rgba(254, 243, 199, 0.15) !important;
+}
