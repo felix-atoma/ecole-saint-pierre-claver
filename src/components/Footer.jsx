@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { content } from '../data/content'
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react'
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Shield } from 'lucide-react'
 
 const Footer = () => {
   const { language } = useLanguage()
@@ -299,6 +299,16 @@ const Footer = () => {
               </Link>
               <Link to="/sitemap" className="hover:text-white transition-colors duration-300">
                 {language === 'fr' ? 'Plan du site' : 'Sitemap'}
+              </Link>
+              
+              {/* Hidden Admin Login Link */}
+              <Link 
+                to="/admin/login" 
+                className="hover:text-white transition-colors duration-300 opacity-50 hover:opacity-100 text-xs flex items-center space-x-1"
+                title={language === 'fr' ? 'Accès Administrateur' : 'Admin Access'}
+              >
+                <Shield size={12} />
+                <span>{language === 'fr' ? 'Admin' : 'Admin'}</span>
               </Link>
             </div>
 

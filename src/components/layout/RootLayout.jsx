@@ -21,7 +21,13 @@ import Faculty from '../../pages/Faculty'
 import Apply from '../../pages/Apply'
 import LanguageCourses from '../../pages/LanguageCourses'
 import Portal from '../../pages/Portal'
-import ParentsPortal from '../../pages/ParentsPortal' // Add this import
+import ParentsPortal from '../../pages/ParentsPortal'
+
+// Admin Components
+import AdminLogin from '../../pages/AdminLogin'
+import AdminMessagesDashboard from '../../pages/AdminMessagesDashboard'
+import AdminLayout from '../../components/AdminLayout'
+import ProtectedRoute from '../../components/ProtectedRoute'
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -46,6 +52,7 @@ const RootLayout = () => {
       <main className="flex-grow relative z-10">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
+            {/* Public Routes */}
             <Route path="/" element={
               <motion.div
                 initial="initial"
@@ -211,7 +218,6 @@ const RootLayout = () => {
                 <LanguageCourses />
               </motion.div>
             } />
-            {/* Portal Route */}
             <Route path="/portal" element={
               <motion.div
                 initial="initial"
@@ -223,7 +229,6 @@ const RootLayout = () => {
                 <Portal />
               </motion.div>
             } />
-            {/* Parents Portal Route - ADD THIS */}
             <Route path="/parents-portal" element={
               <motion.div
                 initial="initial"
@@ -233,6 +238,72 @@ const RootLayout = () => {
                 transition={pageTransition}
               >
                 <ParentsPortal />
+              </motion.div>
+            } />
+
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <AdminLogin />
+              </motion.div>
+            } />
+            
+            {/* Protected Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <AdminMessagesDashboard />
+                </motion.div>
+              } />
+              <Route path="messages" element={
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <AdminMessagesDashboard />
+                </motion.div>
+              } />
+            </Route>
+
+            {/* Catch-all route for 404 pages */}
+            <Route path="*" element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+                className="min-h-screen flex items-center justify-center"
+              >
+                <div className="text-center">
+                  <h1 className="text-6xl font-bold text-primary-brown mb-4">404</h1>
+                  <p className="text-xl text-gray-600 mb-8">Page not found</p>
+                  <a 
+                    href="/" 
+                    className="btn-primary"
+                  >
+                    Return Home
+                  </a>
+                </div>
               </motion.div>
             } />
           </Routes>
