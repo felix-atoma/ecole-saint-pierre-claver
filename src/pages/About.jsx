@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '../contexts/LanguageContext'
 import { content } from '../data/content'
-import { ChevronLeft, ChevronRight, Users, Award, Clock, MapPin } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Users, Award, Clock, MapPin, Globe, BookOpen, GraduationCap, Briefcase } from 'lucide-react'
 import SEO from '../components/SEO'
 
 const About = () => {
@@ -13,15 +13,15 @@ const About = () => {
   // SEO content for both languages
   const seoContent = {
     fr: {
-      title: "À Propos - École Saint Pierre Claver | Notre Histoire et Mission",
-      description: "Découvrez l'histoire, la mission et les valeurs de l'École Saint Pierre Claver. Fondée en 1995, notre institution offre une éducation d'excellence bilingue.",
-      keywords: "école Saint Pierre Claver, histoire école, mission éducation, valeurs pédagogiques, école bilingue, excellence académique",
+      title: "À Propos - École Saint Pierre Claver | Centre de Langues et Éducation",
+      description: "École Saint Pierre Claver: éducation d'excellence de la maternelle au lycée et centre de langues pour adultes. Cours de français, anglais, allemand et espagnol pour carrière et développement professionnel.",
+      keywords: "école Saint Pierre Claver, centre de langues Ouagadougou, cours français adultes, apprentissage anglais, allemand Burkina, espagnol professionnel, formation linguistique, cours de langues pour carrière",
       ogImage: "/about/og-image-fr.jpg"
     },
     en: {
-      title: "About - Saint Pierre Claver School | Our History and Mission",
-      description: "Discover the history, mission, and values of Saint Pierre Claver School. Founded in 1995, our institution provides excellent bilingual education.",
-      keywords: "Saint Pierre Claver School, school history, education mission, pedagogical values, bilingual school, academic excellence",
+      title: "About - Saint Pierre Claver School | Language Center and Education",
+      description: "Saint Pierre Claver School: excellence in education from kindergarten to high school and language center for adults. French, English, German, and Spanish courses for career and professional development.",
+      keywords: "Saint Pierre Claver School, language center Ouagadougou, French courses adults, English learning, German Burkina, professional Spanish, language training, career language courses",
       ogImage: "/about/og-image-en.jpg"
     }
   }
@@ -41,16 +41,16 @@ const About = () => {
       description: language === 'fr' ? "Pédagogie centrée sur l'étudiant favorisant l'engagement et la participation" : "Student-centered pedagogy promoting engagement and participation"
     },
     {
+      src: "/about/language-center.jpg",
+      alt: language === 'fr' ? "Centre de langues pour adultes avec cours de français, anglais, allemand et espagnol" : "Language center for adults with French, English, German, and Spanish courses",
+      title: language === 'fr' ? "Centre de Langues pour Adultes" : "Adult Language Center",
+      description: language === 'fr' ? "Formation linguistique professionnelle pour le développement de carrière" : "Professional language training for career development"
+    },
+    {
       src: "/about/science-lab.jpg",
       alt: language === 'fr' ? "Laboratoire scientifique équipé pour l'expérimentation pratique" : "Fully equipped science laboratory for hands-on experimentation",
       title: language === 'fr' ? "Laboratoires Scientifiques Avancés" : "Advanced Science Laboratories",
       description: language === 'fr' ? "Installations modernes pour la recherche et l'expérimentation scientifique" : "Modern facilities for scientific research and experimentation"
-    },
-    {
-      src: "/about/sports-facilities.jpg",
-      alt: language === 'fr' ? "Installations sportives complètes pour le développement physique" : "Comprehensive sports facilities for physical development",
-      title: language === 'fr' ? "Excellence Sportive et Bien-être" : "Sports Excellence and Wellness",
-      description: language === 'fr' ? "Programmes sportifs diversifiés pour le développement holistique" : "Diverse sports programs for holistic development"
     },
     {
       src: "/about/cultural-event.jpg",
@@ -78,11 +78,133 @@ const About = () => {
       label: language === 'fr' ? "Enseignants Qualifiés" : "Qualified Teachers"
     },
     {
-      icon: MapPin,
-      number: "15+",
-      label: language === 'fr' ? "Hectares de Campus" : "Hectares Campus"
+      icon: Globe,
+      number: "500+",
+      label: language === 'fr' ? "Apprenants en Langues" : "Language Learners"
     }
   ]
+
+  // Language Center Data
+  const languageCenterData = {
+    fr: {
+      title: "Centre de Langues pour Adultes",
+      subtitle: "Développez vos compétences linguistiques pour booster votre carrière",
+      description: "Notre centre de langues propose des cours de français, anglais, allemand et espagnol adaptés aux besoins des professionnels, étudiants et toute personne souhaitant améliorer ses compétences linguistiques.",
+      features: [
+        {
+          icon: "🎯",
+          title: "Formation Sur Mesure",
+          description: "Programmes adaptés à vos objectifs professionnels et personnels"
+        },
+        {
+          icon: "📊",
+          title: "Préparation aux Certifications",
+          description: "Préparation aux examens internationaux DELF, DALF, TOEFL, Goethe, DELE"
+        },
+        {
+          icon: "💼",
+          title: "Focus Professionnel",
+          description: "Vocabulaire spécialisé selon votre domaine d'activité"
+        },
+        {
+          icon: "🕒",
+          title: "Horaires Flexibles",
+          description: "Cours du jour, du soir et week-end pour s'adapter à votre emploi du temps"
+        }
+      ],
+      languages: [
+        {
+          name: "Français",
+          level: language === 'fr' ? "Tous niveaux" : "All levels",
+          description: language === 'fr' ? "Perfectionnement et certification pour non-francophones" : "Improvement and certification for non-French speakers",
+          certifications: "DELF/DALF"
+        },
+        {
+          name: "Anglais",
+          level: language === 'fr' ? "Débutant à Avancé" : "Beginner to Advanced",
+          description: language === 'fr' ? "Anglais général et professionnel pour le monde des affaires" : "General and business English for the corporate world",
+          certifications: "TOEFL/IELTS/Cambridge"
+        },
+        {
+          name: "Allemand",
+          level: language === 'fr' ? "Débutant à Intermédiaire" : "Beginner to Intermediate",
+          description: language === 'fr' ? "Langue germanique pour études et opportunités professionnelles" : "Germanic language for studies and professional opportunities",
+          certifications: "Goethe-Zertifikat"
+        },
+        {
+          name: "Espagnol",
+          level: language === 'fr' ? "Débutant à Avancé" : "Beginner to Advanced",
+          description: language === 'fr' ? "Deuxième langue mondiale pour échanges internationaux" : "Second world language for international exchanges",
+          certifications: "DELE"
+        }
+      ],
+      benefits: [
+        language === 'fr' ? "Amélioration des perspectives de carrière" : "Enhanced career prospects",
+        language === 'fr' ? "Communication efficace en milieu professionnel" : "Effective communication in professional settings",
+        language === 'fr' ? "Ouverture à des opportunités internationales" : "Access to international opportunities",
+        language === 'fr' ? "Développement personnel et culturel" : "Personal and cultural development"
+      ]
+    },
+    en: {
+      title: "Adult Language Center",
+      subtitle: "Develop your language skills to boost your career",
+      description: "Our language center offers French, English, German, and Spanish courses tailored to the needs of professionals, students, and anyone looking to improve their language skills.",
+      features: [
+        {
+          icon: "🎯",
+          title: "Customized Training",
+          description: "Programs adapted to your professional and personal goals"
+        },
+        {
+          icon: "📊",
+          title: "Certification Preparation",
+          description: "Preparation for international exams DELF, DALF, TOEFL, Goethe, DELE"
+        },
+        {
+          icon: "💼",
+          title: "Professional Focus",
+          description: "Specialized vocabulary according to your field of activity"
+        },
+        {
+          icon: "🕒",
+          title: "Flexible Schedules",
+          description: "Day, evening, and weekend classes to fit your schedule"
+        }
+      ],
+      languages: [
+        {
+          name: "French",
+          level: "All levels",
+          description: "Improvement and certification for non-French speakers",
+          certifications: "DELF/DALF"
+        },
+        {
+          name: "English",
+          level: "Beginner to Advanced",
+          description: "General and business English for the corporate world",
+          certifications: "TOEFL/IELTS/Cambridge"
+        },
+        {
+          name: "German",
+          level: "Beginner to Intermediate",
+          description: "Germanic language for studies and professional opportunities",
+          certifications: "Goethe-Zertifikat"
+        },
+        {
+          name: "Spanish",
+          level: "Beginner to Advanced",
+          description: "Second world language for international exchanges",
+          certifications: "DELE"
+        }
+      ],
+      benefits: [
+        "Enhanced career prospects",
+        "Effective communication in professional settings",
+        "Access to international opportunities",
+        "Personal and cultural development"
+      ]
+    }
+  }
 
   // Leadership team
   const leadershipTeam = [
@@ -106,6 +228,14 @@ const About = () => {
     }
   ]
 
+  // Language Center Director
+  const languageCenterDirector = {
+    name: language === 'fr' ? "M. David Ouedraogo" : "Mr. David Ouedraogo",
+    position: language === 'fr' ? "Directeur du Centre de Langues" : "Language Center Director",
+    bio: language === 'fr' ? "15 ans d'expérience en enseignement des langues étrangères et formation professionnelle" : "15 years experience in foreign language teaching and professional training",
+    image: "/about/leadership/language-director.jpg"
+  }
+
   // Auto-advance carousel
   useEffect(() => {
     const interval = setInterval(() => {
@@ -127,6 +257,7 @@ const About = () => {
   }
 
   const currentSEO = seoContent[language]
+  const languageCenter = languageCenterData[language]
 
   return (
     <div className="bg-gray-50">
@@ -259,6 +390,102 @@ const About = () => {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Language Center Section */}
+      <section className="section-padding bg-gradient-to-br from-primary-brown to-primary-brown-dark text-white">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-6">
+              <Globe className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+              {languageCenter.title}
+            </h2>
+            <p className="text-xl text-primary-cream mb-6 max-w-3xl mx-auto">
+              {languageCenter.subtitle}
+            </p>
+            <p className="text-lg text-primary-cream-light max-w-2xl mx-auto">
+              {languageCenter.description}
+            </p>
+          </motion.div>
+
+          {/* Language Center Features */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {languageCenter.features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/15 transition-all duration-300"
+              >
+                <div className="text-3xl mb-4">{feature.icon}</div>
+                <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                <p className="text-primary-cream-light text-sm">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Languages Offered */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
+            <h3 className="text-2xl font-bold text-center mb-8">
+              {language === 'fr' ? 'Langues Proposées' : 'Languages Offered'}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {languageCenter.languages.map((languageItem, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="bg-white/5 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300"
+                >
+                  <div className="text-2xl mb-3">{
+                    languageItem.name === 'Français' || languageItem.name === 'French' ? '🇫🇷' :
+                    languageItem.name === 'Anglais' || languageItem.name === 'English' ? '🇬🇧' :
+                    languageItem.name === 'Allemand' || languageItem.name === 'German' ? '🇩🇪' : '🇪🇸'
+                  }</div>
+                  <h4 className="font-bold text-lg mb-2">{languageItem.name}</h4>
+                  <p className="text-primary-cream text-sm mb-2">{languageItem.level}</p>
+                  <p className="text-primary-cream-light text-xs mb-3">{languageItem.description}</p>
+                  <div className="bg-primary-brown/50 rounded-full px-3 py-1 text-xs">
+                    {languageItem.certifications}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Benefits */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <h3 className="text-2xl font-bold mb-6">
+              {language === 'fr' ? 'Avantages pour Votre Carrière' : 'Benefits for Your Career'}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+              {languageCenter.benefits.map((benefit, index) => (
+                <div key={index} className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-primary-cream rounded-full"></div>
+                  <span className="text-primary-cream text-sm">{benefit}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -439,6 +666,14 @@ const About = () => {
                   image: "/about/history/expansion.jpg"
                 },
                 {
+                  year: "2015",
+                  title: language === 'fr' ? "Centre de Langues" : "Language Center",
+                  description: language === 'fr' 
+                    ? "Ouverture du centre de langues pour adultes et professionnels" 
+                    : "Opening of the language center for adults and professionals",
+                  image: "/about/history/language-center.jpg"
+                },
+                {
                   year: "2020",
                   title: language === 'fr' ? "Excellence" : "Excellence",
                   description: language === 'fr' 
@@ -488,8 +723,8 @@ const About = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {leadershipTeam.map((member, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[...leadershipTeam, languageCenterDirector].map((member, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -541,8 +776,8 @@ const About = () => {
             className="text-xl text-primary-cream mb-8 max-w-2xl mx-auto"
           >
             {language === 'fr'
-              ? "Découvrez comment nous pouvons accompagner l'épanouissement académique et personnel de votre enfant"
-              : "Discover how we can support your child's academic and personal development"
+              ? "Que ce soit pour l'éducation de vos enfants ou pour développer vos compétences linguistiques, nous avons la solution adaptée"
+              : "Whether for your children's education or to develop your language skills, we have the right solution"
             }
           </motion.p>
           <motion.div
@@ -556,7 +791,10 @@ const About = () => {
               {language === 'fr' ? 'Demander une Visite' : 'Schedule a Visit'}
             </button>
             <button className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-primary-brown transition-all duration-300">
-              {language === 'fr' ? 'Télécharger la Brochure' : 'Download Brochure'}
+              {language === 'fr' ? 'Brochure des Cours de Langues' : 'Language Courses Brochure'}
+            </button>
+            <button className="border-2 border-primary-cream text-primary-cream px-8 py-4 rounded-lg font-bold text-lg hover:bg-primary-cream hover:text-primary-brown transition-all duration-300">
+              {language === 'fr' ? 'Test de Niveau Gratuit' : 'Free Level Test'}
             </button>
           </motion.div>
         </div>

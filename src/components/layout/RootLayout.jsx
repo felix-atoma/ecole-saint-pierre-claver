@@ -19,6 +19,8 @@ import Gallery from '../../pages/Gallery'
 import Faith from '../../pages/Faith'
 import Faculty from '../../pages/Faculty'
 import Apply from '../../pages/Apply'
+import LanguageCourses from '../../pages/LanguageCourses'
+import Portal from '../../pages/Portal'
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -195,6 +197,29 @@ const RootLayout = () => {
                 transition={pageTransition}
               >
                 <Apply />
+              </motion.div>
+            } />
+            <Route path="/language-courses" element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <LanguageCourses />
+              </motion.div>
+            } />
+            {/* Portal Route - Added */}
+            <Route path="/portal" element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <Portal />
               </motion.div>
             } />
           </Routes>
