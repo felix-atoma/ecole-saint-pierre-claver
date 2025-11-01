@@ -1,0 +1,199 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  /* Custom Colors */
+  --color-primary-cream: #F5F5DC;
+  --color-primary-brown: #8B4513;
+  --color-primary-dark: #5D4037;
+  --color-secondary-gold: #D4AF37;
+  --color-secondary-light: #FFF8E1;
+
+  /* Custom Fonts */
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: Inter, system-ui, sans-serif;
+
+  /* Custom Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-bubble: bubble 8s ease-in-out infinite;
+  --animate-spin-slow: spin 3s linear infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-in-up: fadeInUp 0.8s ease-out;
+  --animate-fade-in-down: fadeInDown 0.8s ease-out;
+  --animate-fade-in: fadeIn 1s ease-out;
+
+  /* Keyframes */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes bubble {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    33% { transform: translateY(-30px) scale(1.1); }
+    66% { transform: translateY(-15px) scale(0.9); }
+  }
+
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInDown {
+    0% { opacity: 0; transform: translateY(-30px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8B4513;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5D4037;
+}
+
+/* Spider Web Background */
+.spider-web {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(139, 69, 19, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(139, 69, 19, 0.1) 2px, transparent 2px);
+  background-size: 100px 100px;
+  background-position: 0 0, 50px 50px;
+}
+
+/* Bubble animations */
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.3), rgba(139, 69, 19, 0.1));
+  box-shadow: 
+    inset 0 0 20px rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(212, 175, 55, 0.2);
+}
+
+.bubble-1 {
+  width: 80px;
+  height: 80px;
+  top: 10%;
+  left: 5%;
+  animation: bubble 15s ease-in-out infinite;
+}
+
+.bubble-2 {
+  width: 120px;
+  height: 120px;
+  top: 60%;
+  right: 10%;
+  animation: bubble 12s ease-in-out infinite reverse;
+}
+
+.bubble-3 {
+  width: 60px;
+  height: 60px;
+  bottom: 20%;
+  left: 15%;
+  animation: bubble 18s ease-in-out infinite;
+}
+
+.bubble-4 {
+  width: 100px;
+  height: 100px;
+  top: 30%;
+  right: 5%;
+  animation: bubble 14s ease-in-out infinite reverse;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #8B4513 0%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Section padding */
+.section-padding {
+  @apply py-16 lg:py-20;
+}
+
+.container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.btn-primary {
+  @apply bg-primary-brown text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition-all duration-300 font-medium shadow-lg hover:shadow-xl;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+
+.btn-secondary {
+  @apply border-2 border-primary-brown text-primary-brown px-6 py-3 rounded-lg hover:bg-primary-brown hover:text-white transition-all duration-300 font-medium;
+}
+
+.btn-secondary:hover {
+  transform: scale(1.05);
+}
+
+.section-title {
+  @apply text-3xl lg:text-4xl font-bold text-primary-brown text-center mb-4 animate-fade-in-down;
+}
+
+.section-subtitle {
+  @apply text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in-up;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
