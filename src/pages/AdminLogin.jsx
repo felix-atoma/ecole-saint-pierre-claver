@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { Eye, EyeOff, Lock, Mail, School, Shield, AlertCircle, CheckCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import SEO from '../components/SEO'
+import { authService } from '../services/authService'
 
 const AdminLogin = () => {
   const { language } = useLanguage()
@@ -44,7 +45,8 @@ const AdminLogin = () => {
       errors: {
         invalidCredentials: "Email ou mot de passe incorrect",
         required: "Ce champ est requis",
-        invalidEmail: "Format d'email invalide"
+        invalidEmail: "Format d'email invalide",
+        serverError: "Erreur de serveur. Veuillez réessayer."
       },
       success: {
         login: "Connexion réussie ! Redirection..."
@@ -75,7 +77,8 @@ const AdminLogin = () => {
       errors: {
         invalidCredentials: "Invalid email or password",
         required: "This field is required",
-        invalidEmail: "Invalid email format"
+        invalidEmail: "Invalid email format",
+        serverError: "Server error. Please try again."
       },
       success: {
         login: "Login successful! Redirecting..."
@@ -111,36 +114,34 @@ const AdminLogin = () => {
     setIsLoading(true)
 
     try {
-      // Simulate API call - replace with actual authentication
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
-      // Mock authentication - replace with real backend validation
-      const validCredentials = 
-        formData.email === 'admin@stpierreclaver.edu.gh' && 
-        formData.password === 'admin123'
-
-      if (validCredentials) {
+      const response = await authService.adminLogin(formData.email, formData.password)
+      
+      if (response.success) {
         setSuccess(t.success.login)
         
-        // Store auth token (mock)
-        localStorage.setItem('adminToken', 'mock-jwt-token')
-        localStorage.setItem('adminEmail', formData.email)
+        // Store auth token and user info
+        localStorage.setItem('adminToken', response.data.token)
+        authService.storeUser(response.data.user)
+        
         if (formData.rememberMe) {
           localStorage.setItem('rememberMe', 'true')
         }
 
         // Redirect to admin dashboard
         setTimeout(() => {
-          navigate('/admin/dashboard')
+          navigate('/admin')
         }, 1000)
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      
+      if (err.response?.data?.message) {
+        setError(err.response.data.message)
+      } else if (err.code === 'NETWORK_ERROR') {
+        setError(t.errors.serverError)
       } else {
         setError(t.errors.invalidCredentials)
       }
-    } catch (err) {
-      setError(language === 'fr' 
-        ? 'Erreur de connexion. Veuillez réessayer.'
-        : 'Login error. Please try again.'
-      )
     } finally {
       setIsLoading(false)
     }
@@ -426,13 +427,13 @@ const AdminLogin = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-primary-cream/80">Email:</span>
                     <code className="bg-black/30 px-2 py-1 rounded text-primary-cream font-mono">
-                      admin@stpierreclaver.edu.gh
+                      
                     </code>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-primary-cream/80">Password:</span>
                     <code className="bg-black/30 px-2 py-1 rounded text-primary-cream font-mono">
-                      admin123
+                      
                     </code>
                   </div>
                 </div>

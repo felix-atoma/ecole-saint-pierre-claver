@@ -4,7 +4,6 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { 
   Mail, 
   Search, 
-  Filter, 
   Download, 
   Eye, 
   Trash2, 
@@ -13,15 +12,13 @@ import {
   Clock,
   User,
   Phone,
-  MapPin,
   Calendar,
-  ChevronDown,
-  ChevronUp,
   CheckCircle,
   XCircle,
-  MoreVertical
+  RefreshCw
 } from 'lucide-react'
 import SEO from '../components/SEO'
+import { messageService } from '../services/messageService'
 
 const AdminMessagesDashboard = () => {
   const { language } = useLanguage()
@@ -32,72 +29,15 @@ const AdminMessagesDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
-  const [selectedMessages, setSelectedMessages] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-
-  // Mock data - replace with actual API calls
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockMessages = [
-        {
-          id: 1,
-          name: 'John Doe',
-          email: 'john.doe@email.com',
-          subject: 'Admission Inquiry for Grade 5',
-          message: 'I would like to know more about the admission process for my son who will be entering Grade 5 next academic year.',
-          studentGrade: 'primary',
-          inquiryType: 'admission',
-          status: 'new', // new, read, replied, archived
-          date: '2024-01-15T10:30:00Z',
-          phone: '+233 12 345 6789',
-          priority: 'high' // low, medium, high
-        },
-        {
-          id: 2,
-          name: 'Sarah Mensah',
-          email: 'sarah.mensah@email.com',
-          subject: 'Campus Tour Request',
-          message: 'We are interested in visiting your campus next week to see the facilities and meet with the admissions team.',
-          studentGrade: 'jhs',
-          inquiryType: 'visit',
-          status: 'read',
-          date: '2024-01-14T14:20:00Z',
-          phone: '+233 23 456 7890',
-          priority: 'medium'
-        },
-        {
-          id: 3,
-          name: 'Dr. Kwame Osei',
-          email: 'k.osei@university.edu.gh',
-          subject: 'Partnership Opportunity',
-          message: 'Our university is interested in establishing a partnership program for student exchanges and collaborative research.',
-          studentGrade: 'other',
-          inquiryType: 'partnership',
-          status: 'replied',
-          date: '2024-01-13T09:15:00Z',
-          phone: '+233 34 567 8901',
-          priority: 'high'
-        },
-        {
-          id: 4,
-          name: 'Ama Johnson',
-          email: 'ama.johnson@email.com',
-          subject: 'General Information',
-          message: 'Could you please send me information about your school fees structure and extracurricular activities?',
-          studentGrade: 'preschool',
-          inquiryType: 'information',
-          status: 'archived',
-          date: '2024-01-12T16:45:00Z',
-          phone: '+233 45 678 9012',
-          priority: 'low'
-        }
-      ]
-      setMessages(mockMessages)
-      setFilteredMessages(mockMessages)
-      setIsLoading(false)
-    }, 1000)
-  }, [])
+  const [stats, setStats] = useState({
+    total: 0,
+    new: 0,
+    read: 0,
+    replied: 0,
+    archived: 0
+  })
+  const [replyText, setReplyText] = useState('')
 
   const dashboardContent = {
     fr: {
@@ -151,15 +91,20 @@ const AdminMessagesDashboard = () => {
         markRead: "Marquer comme lu",
         markReplied: "Marquer comme répondu",
         download: "Télécharger",
-        selectAll: "Tout sélectionner",
-        clearSelection: "Effacer la sélection"
+        refresh: "Actualiser"
       },
       messageDetail: {
         contactInfo: "Informations de Contact",
         message: "Message",
         reply: "Répondre",
         close: "Fermer",
-        sendReply: "Envoyer la réponse"
+        sendReply: "Envoyer la réponse",
+        replyPlaceholder: "Tapez votre réponse ici..."
+      },
+      errors: {
+        fetchError: "Erreur lors du chargement des messages",
+        deleteError: "Erreur lors de la suppression du message",
+        replyError: "Erreur lors de l'envoi de la réponse"
       }
     },
     en: {
@@ -213,92 +158,137 @@ const AdminMessagesDashboard = () => {
         markRead: "Mark as Read",
         markReplied: "Mark as Replied",
         download: "Download",
-        selectAll: "Select All",
-        clearSelection: "Clear Selection"
+        refresh: "Refresh"
       },
       messageDetail: {
         contactInfo: "Contact Information",
         message: "Message",
         reply: "Reply",
         close: "Close",
-        sendReply: "Send Reply"
+        sendReply: "Send Reply",
+        replyPlaceholder: "Type your reply here..."
+      },
+      errors: {
+        fetchError: "Error loading messages",
+        deleteError: "Error deleting message",
+        replyError: "Error sending reply"
       }
     }
   }
 
   const t = dashboardContent[language]
 
-  // Filter and sort messages
-  useEffect(() => {
-    let filtered = messages.filter(message => {
-      const matchesSearch = 
-        message.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        message.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        message.message.toLowerCase().includes(searchTerm.toLowerCase())
+  // Fetch messages
+  const fetchMessages = async () => {
+    try {
+      setIsLoading(true)
+      const response = await messageService.getMessages({
+        status: statusFilter,
+        type: typeFilter,
+        search: searchTerm,
+        sortBy,
+        page: 1,
+        limit: 50
+      })
       
-      const matchesStatus = statusFilter === 'all' || message.status === statusFilter
-      const matchesType = typeFilter === 'all' || message.inquiryType === typeFilter
-      
-      return matchesSearch && matchesStatus && matchesType
-    })
-
-    // Sort messages
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.date) - new Date(a.date)
-        case 'oldest':
-          return new Date(a.date) - new Date(b.date)
-        case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 }
-          return priorityOrder[b.priority] - priorityOrder[a.priority]
-        default:
-          return 0
+      if (response.success) {
+        setMessages(response.data.messages)
+        setFilteredMessages(response.data.messages)
       }
-    })
-
-    setFilteredMessages(filtered)
-  }, [messages, searchTerm, statusFilter, typeFilter, sortBy])
-
-  // Calculate statistics
-  const stats = {
-    total: messages.length,
-    new: messages.filter(m => m.status === 'new').length,
-    read: messages.filter(m => m.status === 'read').length,
-    replied: messages.filter(m => m.status === 'replied').length,
-    archived: messages.filter(m => m.status === 'archived').length
+    } catch (error) {
+      console.error('Error fetching messages:', error)
+      // You can add a toast notification here
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleViewMessage = (message) => {
+  // Fetch statistics
+  const fetchStats = async () => {
+    try {
+      const response = await messageService.getMessageStats()
+      if (response.success) {
+        setStats(response.data)
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchMessages()
+    fetchStats()
+  }, [statusFilter, typeFilter, searchTerm, sortBy])
+
+  const handleViewMessage = async (message) => {
     setSelectedMessage(message)
-    // Mark as read when viewing
+    // Mark as read when viewing if it's new
     if (message.status === 'new') {
-      updateMessageStatus(message.id, 'read')
+      try {
+        await messageService.updateMessageStatus(message._id, 'read')
+        // Update local state
+        setMessages(prev => prev.map(msg => 
+          msg._id === message._id ? { ...msg, status: 'read' } : msg
+        ))
+        fetchStats() // Refresh stats
+      } catch (error) {
+        console.error('Error updating message status:', error)
+      }
     }
   }
 
-  const updateMessageStatus = (id, status) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === id ? { ...msg, status } : msg
-    ))
+  const handleDeleteMessage = async (id) => {
+    if (window.confirm(language === 'fr' 
+      ? 'Êtes-vous sûr de vouloir supprimer ce message ?' 
+      : 'Are you sure you want to delete this message?'
+    )) {
+      try {
+        await messageService.deleteMessage(id)
+        setMessages(prev => prev.filter(msg => msg._id !== id))
+        if (selectedMessage?._id === id) {
+          setSelectedMessage(null)
+        }
+        fetchStats() // Refresh stats
+      } catch (error) {
+        console.error('Error deleting message:', error)
+        alert(t.errors.deleteError)
+      }
+    }
   }
 
-  const handleDeleteMessage = (id) => {
-    setMessages(prev => prev.filter(msg => msg.id !== id))
-    if (selectedMessage?.id === id) {
+  const handleArchiveMessage = async (id) => {
+    try {
+      await messageService.updateMessageStatus(id, 'archived')
+      setMessages(prev => prev.map(msg => 
+        msg._id === id ? { ...msg, status: 'archived' } : msg
+      ))
+      fetchStats() // Refresh stats
+    } catch (error) {
+      console.error('Error archiving message:', error)
+    }
+  }
+
+  const handleReply = async () => {
+    if (!replyText.trim() || !selectedMessage) return
+
+    try {
+      await messageService.replyToMessage(selectedMessage._id, replyText)
+      
+      // Update local state
+      setMessages(prev => prev.map(msg => 
+        msg._id === selectedMessage._id ? { ...msg, status: 'replied' } : msg
+      ))
+      
+      setReplyText('')
       setSelectedMessage(null)
+      fetchStats() // Refresh stats
+      
+      // Show success message
+      alert(language === 'fr' ? 'Réponse envoyée avec succès!' : 'Reply sent successfully!')
+    } catch (error) {
+      console.error('Error sending reply:', error)
+      alert(t.errors.replyError)
     }
-  }
-
-  const handleArchiveMessage = (id) => {
-    updateMessageStatus(id, 'archived')
-  }
-
-  const handleReply = (message) => {
-    // Implement reply functionality
-    console.log('Replying to:', message.email)
-    updateMessageStatus(message.id, 'replied')
   }
 
   const getStatusIcon = (status) => {
@@ -344,7 +334,7 @@ const AdminMessagesDashboard = () => {
     })
   }
 
-  if (isLoading) {
+  if (isLoading && messages.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-brown"></div>
@@ -368,10 +358,19 @@ const AdminMessagesDashboard = () => {
               <h1 className="text-3xl font-bold text-gray-900">{t.title}</h1>
               <p className="text-gray-600 mt-2">{t.subtitle}</p>
             </div>
-            <button className="btn-primary flex items-center space-x-2">
-              <Download size={20} />
-              <span>{t.actions.download}</span>
-            </button>
+            <div className="flex space-x-3">
+              <button 
+                onClick={fetchMessages}
+                className="btn-secondary flex items-center space-x-2"
+              >
+                <RefreshCw size={20} />
+                <span>{t.actions.refresh}</span>
+              </button>
+              <button className="btn-primary flex items-center space-x-2">
+                <Download size={20} />
+                <span>{t.actions.download}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -486,7 +485,7 @@ const AdminMessagesDashboard = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredMessages.map((message) => (
                   <motion.tr
-                    key={message.id}
+                    key={message._id}
                     whileHover={{ backgroundColor: 'rgba(243, 244, 246, 0.5)' }}
                     className="cursor-pointer"
                     onClick={() => handleViewMessage(message)}
@@ -504,7 +503,9 @@ const AdminMessagesDashboard = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">{message.subject}</div>
-                      <div className="text-sm text-gray-500 truncate max-w-xs">{message.message}</div>
+                      <div className="text-sm text-gray-500 truncate max-w-xs">
+                        {message.message.substring(0, 100)}...
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-900">{getTypeLabel(message.inquiryType)}</span>
@@ -519,7 +520,7 @@ const AdminMessagesDashboard = () => {
                       {getPriorityBadge(message.priority)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(message.date)}
+                      {formatDate(message.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
@@ -528,34 +529,39 @@ const AdminMessagesDashboard = () => {
                             e.stopPropagation()
                             handleViewMessage(message)
                           }}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                          title={t.actions.view}
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleReply(message)
+                            setSelectedMessage(message)
+                            setReplyText('')
                           }}
-                          className="text-green-600 hover:text-green-900"
+                          className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                          title={t.actions.reply}
                         >
                           <Reply size={16} />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleArchiveMessage(message.id)
+                            handleArchiveMessage(message._id)
                           }}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-50"
+                          title={t.actions.archive}
                         >
                           <Archive size={16} />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleDeleteMessage(message.id)
+                            handleDeleteMessage(message._id)
                           }}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                          title={t.actions.delete}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -570,7 +576,9 @@ const AdminMessagesDashboard = () => {
           {filteredMessages.length === 0 && (
             <div className="text-center py-12">
               <Mail size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500 text-lg">No messages found</p>
+              <p className="text-gray-500 text-lg">
+                {language === 'fr' ? 'Aucun message trouvé' : 'No messages found'}
+              </p>
             </div>
           )}
         </div>
@@ -588,11 +596,11 @@ const AdminMessagesDashboard = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">{selectedMessage.subject}</h2>
-                  <p className="text-gray-600 mt-1">{formatDate(selectedMessage.date)}</p>
+                  <p className="text-gray-600 mt-1">{formatDate(selectedMessage.createdAt)}</p>
                 </div>
                 <button
                   onClick={() => setSelectedMessage(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
                 >
                   <XCircle size={24} />
                 </button>
@@ -648,28 +656,34 @@ const AdminMessagesDashboard = () => {
                 {/* Message Content */}
                 <div className="lg:col-span-2">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.messageDetail.message}</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 rounded-lg p-4 mb-6">
                     <p className="text-gray-700 whitespace-pre-wrap">{selectedMessage.message}</p>
                   </div>
 
                   {/* Reply Section */}
-                  <div className="mt-6">
+                  <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.messageDetail.reply}</h3>
                     <textarea
                       rows="6"
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent resize-none"
-                      placeholder={language === 'fr' ? 'Tapez votre réponse ici...' : 'Type your reply here...'}
+                      placeholder={t.messageDetail.replyPlaceholder}
                     ></textarea>
                     <div className="flex justify-end space-x-3 mt-4">
                       <button
-                        onClick={() => setSelectedMessage(null)}
+                        onClick={() => {
+                          setSelectedMessage(null)
+                          setReplyText('')
+                        }}
                         className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-300"
                       >
                         {t.messageDetail.close}
                       </button>
                       <button
-                        onClick={() => handleReply(selectedMessage)}
-                        className="btn-primary flex items-center space-x-2"
+                        onClick={handleReply}
+                        disabled={!replyText.trim()}
+                        className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Reply size={16} />
                         <span>{t.messageDetail.sendReply}</span>

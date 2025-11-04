@@ -4,39 +4,51 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { 
   User, Mail, Phone, MapPin, Calendar, BookOpen, 
   Upload, CheckCircle, ArrowRight, School, Users,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, AlertCircle,
+  Loader
 } from 'lucide-react'
 import SEO from '../components/SEO'
+import { applicationService } from '../services/applicationService'
 
 const Apply = () => {
   const { language } = useLanguage()
   const [currentStep, setCurrentStep] = useState(1)
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' })
+  
   const [formData, setFormData] = useState({
     // Student Information
-    firstName: '',
-    lastName: '',
-    birthDate: '',
-    gender: '',
-    nationality: '',
-    
+    studentInfo: {
+      firstName: '',
+      lastName: '',
+      birthDate: '',
+      gender: '',
+      nationality: ''
+    },
     // Contact Information
-    parentName: '',
-    parentEmail: '',
-    parentPhone: '',
-    address: '',
-    city: '',
-    
+    contactInfo: {
+      parentName: '',
+      parentEmail: '',
+      parentPhone: '',
+      address: '',
+      city: ''
+    },
     // Academic Information
-    gradeLevel: '',
-    previousSchool: '',
-    languageProficiency: '',
-    specialNeeds: '',
-    
+    academicInfo: {
+      gradeLevel: '',
+      previousSchool: '',
+      languageProficiency: '',
+      specialNeeds: ''
+    },
     // Documents
-    birthCertificate: null,
-    previousReports: null,
-    photo: null
+    documents: {
+      birthCertificate: null,
+      previousReports: null,
+      photo: null,
+      vaccinationCertificate: null,
+      transferCertificate: null
+    }
   })
 
   const applicationContent = {
@@ -116,7 +128,9 @@ const Apply = () => {
         uploadFields: {
           birthCertificate: "Acte de Naissance",
           previousReports: "Bulletins Scolaires",
-          photo: "Photo d'Identité"
+          photo: "Photo d'Identité",
+          vaccinationCertificate: "Certificat de Vaccination",
+          transferCertificate: "Attestation de Transfert"
         }
       },
       confirmation: {
@@ -128,7 +142,13 @@ const Apply = () => {
         next: "Suivant",
         previous: "Précédent",
         submit: "Soumettre la Demande",
-        saving: "Envoi en cours..."
+        saving: "Envoi en cours...",
+        submitting: "Soumission..."
+      },
+      messages: {
+        success: "Votre demande a été soumise avec succès! Nous vous contacterons bientôt.",
+        error: "Erreur lors de la soumission de la demande. Veuillez réessayer.",
+        fileUploadError: "Erreur lors du téléchargement du fichier"
       }
     },
     en: {
@@ -207,7 +227,9 @@ const Apply = () => {
         uploadFields: {
           birthCertificate: "Birth Certificate",
           previousReports: "School Reports",
-          photo: "Passport Photo"
+          photo: "Passport Photo",
+          vaccinationCertificate: "Vaccination Certificate",
+          transferCertificate: "Transfer Certificate"
         }
       },
       confirmation: {
@@ -219,7 +241,13 @@ const Apply = () => {
         next: "Next",
         previous: "Previous",
         submit: "Submit Application",
-        saving: "Submitting..."
+        saving: "Saving...",
+        submitting: "Submitting..."
+      },
+      messages: {
+        success: "Your application has been submitted successfully! We will contact you soon.",
+        error: "Error submitting application. Please try again.",
+        fileUploadError: "Error uploading file"
       }
     }
   }
@@ -290,49 +318,159 @@ const Apply = () => {
     setCurrentSlide(index)
   }
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (section, field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
     }))
   }
 
   const handleFileUpload = (field, file) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: file
-    }))
+    if (file) {
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        setSubmitStatus({
+          type: 'error',
+          message: language === 'fr' 
+            ? 'Le fichier est trop volumineux. Taille maximale: 10MB' 
+            : 'File is too large. Maximum size: 10MB'
+        })
+        return
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+      if (!allowedTypes.includes(file.type)) {
+        setSubmitStatus({
+          type: 'error',
+          message: language === 'fr'
+            ? 'Type de fichier non supporté. Utilisez JPG, PNG ou PDF'
+            : 'File type not supported. Please use JPG, PNG, or PDF'
+        })
+        return
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          [field]: file
+        }
+      }))
+
+      // Clear any previous error
+      if (submitStatus.type === 'error') {
+        setSubmitStatus({ type: '', message: '' })
+      }
+    }
   }
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, 5))
+    // Clear status messages when moving between steps
+    setSubmitStatus({ type: '', message: '' })
   }
 
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1))
+    setSubmitStatus({ type: '', message: '' })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Application submitted:', formData)
-    // In real implementation, send to backend
-    nextStep()
+    setIsSubmitting(true)
+    setSubmitStatus({ type: '', message: '' })
+
+    try {
+      const response = await applicationService.submitApplication(formData)
+      
+      if (response.success) {
+        setSubmitStatus({ 
+          type: 'success', 
+          message: t.messages.success 
+        })
+        nextStep() // Move to confirmation/success step
+        
+        // Reset form after successful submission
+        setTimeout(() => {
+          setFormData({
+            studentInfo: {
+              firstName: '',
+              lastName: '',
+              birthDate: '',
+              gender: '',
+              nationality: ''
+            },
+            contactInfo: {
+              parentName: '',
+              parentEmail: '',
+              parentPhone: '',
+              address: '',
+              city: ''
+            },
+            academicInfo: {
+              gradeLevel: '',
+              previousSchool: '',
+              languageProficiency: '',
+              specialNeeds: ''
+            },
+            documents: {
+              birthCertificate: null,
+              previousReports: null,
+              photo: null,
+              vaccinationCertificate: null,
+              transferCertificate: null
+            }
+          })
+          setCurrentStep(1)
+        }, 5000)
+      }
+    } catch (error) {
+      console.error('Application submission error:', error)
+      setSubmitStatus({ 
+        type: 'error', 
+        message: error.response?.data?.message || t.messages.error 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const isStepValid = (step) => {
     switch (step) {
       case 1:
-        return formData.firstName && formData.lastName && formData.birthDate && formData.gender && formData.nationality
+        const { studentInfo } = formData
+        return studentInfo.firstName && studentInfo.lastName && 
+               studentInfo.birthDate && studentInfo.gender && 
+               studentInfo.nationality
       case 2:
-        return formData.parentName && formData.parentEmail && formData.parentPhone && formData.address && formData.city
+        const { contactInfo } = formData
+        return contactInfo.parentName && contactInfo.parentEmail && 
+               contactInfo.parentPhone && contactInfo.address && 
+               contactInfo.city
       case 3:
-        return formData.gradeLevel && formData.previousSchool && formData.languageProficiency
+        const { academicInfo } = formData
+        return academicInfo.gradeLevel && academicInfo.previousSchool && 
+               academicInfo.languageProficiency
       case 4:
-        return formData.birthCertificate && formData.previousReports && formData.photo
+        const { documents } = formData
+        return documents.birthCertificate && documents.previousReports && 
+               documents.photo
       default:
         return true
     }
+  }
+
+  // Format file size for display
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
   return (
@@ -480,6 +618,28 @@ const Apply = () => {
             </div>
           </motion.div>
 
+          {/* Status Messages */}
+          {submitStatus.message && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${
+                submitStatus.type === 'success' 
+                  ? 'bg-green-50 border border-green-200' 
+                  : 'bg-red-50 border border-red-200'
+              }`}
+            >
+              {submitStatus.type === 'success' ? (
+                <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
+              ) : (
+                <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+              )}
+              <p className={submitStatus.type === 'success' ? 'text-green-700' : 'text-red-700'}>
+                {submitStatus.message}
+              </p>
+            </motion.div>
+          )}
+
           {/* Application Form */}
           <motion.div
             key={currentStep}
@@ -503,10 +663,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="text"
-                        value={formData.firstName}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        value={formData.studentInfo.firstName}
+                        onChange={(e) => handleInputChange('studentInfo', 'firstName', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -515,10 +676,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="text"
-                        value={formData.lastName}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                        value={formData.studentInfo.lastName}
+                        onChange={(e) => handleInputChange('studentInfo', 'lastName', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -527,10 +689,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="date"
-                        value={formData.birthDate}
-                        onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                        value={formData.studentInfo.birthDate}
+                        onChange={(e) => handleInputChange('studentInfo', 'birthDate', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -538,10 +701,11 @@ const Apply = () => {
                         {t.studentInfo.fields.gender} *
                       </label>
                       <select
-                        value={formData.gender}
-                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        value={formData.studentInfo.gender}
+                        onChange={(e) => handleInputChange('studentInfo', 'gender', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       >
                         <option value="">{language === 'fr' ? 'Sélectionner' : 'Select'}</option>
                         {t.studentInfo.genderOptions.map(option => (
@@ -557,10 +721,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="text"
-                        value={formData.nationality}
-                        onChange={(e) => handleInputChange('nationality', e.target.value)}
+                        value={formData.studentInfo.nationality}
+                        onChange={(e) => handleInputChange('studentInfo', 'nationality', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -581,10 +746,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="text"
-                        value={formData.parentName}
-                        onChange={(e) => handleInputChange('parentName', e.target.value)}
+                        value={formData.contactInfo.parentName}
+                        onChange={(e) => handleInputChange('contactInfo', 'parentName', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -593,10 +759,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="email"
-                        value={formData.parentEmail}
-                        onChange={(e) => handleInputChange('parentEmail', e.target.value)}
+                        value={formData.contactInfo.parentEmail}
+                        onChange={(e) => handleInputChange('contactInfo', 'parentEmail', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -605,10 +772,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="tel"
-                        value={formData.parentPhone}
-                        onChange={(e) => handleInputChange('parentPhone', e.target.value)}
+                        value={formData.contactInfo.parentPhone}
+                        onChange={(e) => handleInputChange('contactInfo', 'parentPhone', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -617,10 +785,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="text"
-                        value={formData.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
+                        value={formData.contactInfo.address}
+                        onChange={(e) => handleInputChange('contactInfo', 'address', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -629,10 +798,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="text"
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
+                        value={formData.contactInfo.city}
+                        onChange={(e) => handleInputChange('contactInfo', 'city', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -652,10 +822,11 @@ const Apply = () => {
                         {t.academicInfo.fields.gradeLevel} *
                       </label>
                       <select
-                        value={formData.gradeLevel}
-                        onChange={(e) => handleInputChange('gradeLevel', e.target.value)}
+                        value={formData.academicInfo.gradeLevel}
+                        onChange={(e) => handleInputChange('academicInfo', 'gradeLevel', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       >
                         <option value="">{language === 'fr' ? 'Sélectionner' : 'Select'}</option>
                         {t.academicInfo.gradeOptions.map(option => (
@@ -670,10 +841,11 @@ const Apply = () => {
                         {t.academicInfo.fields.languageProficiency} *
                       </label>
                       <select
-                        value={formData.languageProficiency}
-                        onChange={(e) => handleInputChange('languageProficiency', e.target.value)}
+                        value={formData.academicInfo.languageProficiency}
+                        onChange={(e) => handleInputChange('academicInfo', 'languageProficiency', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       >
                         <option value="">{language === 'fr' ? 'Sélectionner' : 'Select'}</option>
                         {t.academicInfo.languageOptions.map(option => (
@@ -689,10 +861,11 @@ const Apply = () => {
                       </label>
                       <input
                         type="text"
-                        value={formData.previousSchool}
-                        onChange={(e) => handleInputChange('previousSchool', e.target.value)}
+                        value={formData.academicInfo.previousSchool}
+                        onChange={(e) => handleInputChange('academicInfo', 'previousSchool', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -700,11 +873,12 @@ const Apply = () => {
                         {t.academicInfo.fields.specialNeeds}
                       </label>
                       <textarea
-                        value={formData.specialNeeds}
-                        onChange={(e) => handleInputChange('specialNeeds', e.target.value)}
+                        value={formData.academicInfo.specialNeeds}
+                        onChange={(e) => handleInputChange('academicInfo', 'specialNeeds', e.target.value)}
                         rows="3"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent"
                         placeholder={language === 'fr' ? 'Décrivez les besoins spécifiques...' : 'Describe specific needs...'}
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -739,7 +913,7 @@ const Apply = () => {
                     {Object.entries(t.documents.uploadFields).map(([field, label]) => (
                       <div key={field}>
                         <label className="block text-gray-700 mb-2 font-medium">
-                          {label} *
+                          {label} {field !== 'vaccinationCertificate' && field !== 'transferCertificate' ? '*' : ''}
                         </label>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-brown transition-colors cursor-pointer">
                           <Upload className="mx-auto text-gray-400 mb-2" size={32} />
@@ -755,14 +929,24 @@ const Apply = () => {
                             className="hidden"
                             id={field}
                             accept=".pdf,.jpg,.jpeg,.png"
+                            disabled={isSubmitting}
                           />
-                          <label htmlFor={field} className="btn-primary inline-block mt-2 cursor-pointer">
+                          <label 
+                            htmlFor={field} 
+                            className="btn-primary inline-block mt-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
                             {language === 'fr' ? 'Choisir le Fichier' : 'Choose File'}
                           </label>
-                          {formData[field] && (
-                            <p className="text-green-600 mt-2">
-                              ✓ {formData[field].name}
-                            </p>
+                          {formData.documents[field] && (
+                            <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                              <p className="text-green-700 text-sm flex items-center justify-center">
+                                <CheckCircle size={16} className="mr-2" />
+                                {formData.documents[field].name} 
+                                <span className="text-green-600 ml-2">
+                                  ({formatFileSize(formData.documents[field].size)})
+                                </span>
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -788,30 +972,52 @@ const Apply = () => {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <strong>{t.studentInfo.fields.firstName}:</strong> {formData.firstName}
+                          <strong>{t.studentInfo.fields.firstName}:</strong> {formData.studentInfo.firstName}
                         </div>
                         <div>
-                          <strong>{t.studentInfo.fields.lastName}:</strong> {formData.lastName}
+                          <strong>{t.studentInfo.fields.lastName}:</strong> {formData.studentInfo.lastName}
                         </div>
                         <div>
-                          <strong>{t.studentInfo.fields.birthDate}:</strong> {formData.birthDate}
+                          <strong>{t.studentInfo.fields.birthDate}:</strong> {formData.studentInfo.birthDate}
                         </div>
                         <div>
                           <strong>{t.studentInfo.fields.gender}:</strong> {
-                            t.studentInfo.genderOptions.find(g => g.value === formData.gender)?.label
+                            t.studentInfo.genderOptions.find(g => g.value === formData.studentInfo.gender)?.label
                           }
                         </div>
                         <div className="md:col-span-2">
-                          <strong>{t.contactInfo.fields.parentName}:</strong> {formData.parentName}
+                          <strong>{t.contactInfo.fields.parentName}:</strong> {formData.contactInfo.parentName}
                         </div>
                         <div>
-                          <strong>{t.contactInfo.fields.parentEmail}:</strong> {formData.parentEmail}
+                          <strong>{t.contactInfo.fields.parentEmail}:</strong> {formData.contactInfo.parentEmail}
+                        </div>
+                        <div>
+                          <strong>{t.contactInfo.fields.parentPhone}:</strong> {formData.contactInfo.parentPhone}
+                        </div>
+                        <div className="md:col-span-2">
+                          <strong>{t.contactInfo.fields.address}:</strong> {formData.contactInfo.address}
+                        </div>
+                        <div>
+                          <strong>{t.contactInfo.fields.city}:</strong> {formData.contactInfo.city}
                         </div>
                         <div>
                           <strong>{t.academicInfo.fields.gradeLevel}:</strong> {
-                            t.academicInfo.gradeOptions.find(g => g.value === formData.gradeLevel)?.label
+                            t.academicInfo.gradeOptions.find(g => g.value === formData.academicInfo.gradeLevel)?.label
                           }
                         </div>
+                        <div>
+                          <strong>{t.academicInfo.fields.previousSchool}:</strong> {formData.academicInfo.previousSchool}
+                        </div>
+                        <div>
+                          <strong>{t.academicInfo.fields.languageProficiency}:</strong> {
+                            t.academicInfo.languageOptions.find(l => l.value === formData.academicInfo.languageProficiency)?.label
+                          }
+                        </div>
+                        {formData.academicInfo.specialNeeds && (
+                          <div className="md:col-span-2">
+                            <strong>{t.academicInfo.fields.specialNeeds}:</strong> {formData.academicInfo.specialNeeds}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -823,6 +1029,7 @@ const Apply = () => {
                       id="terms"
                       className="mt-1"
                       required
+                      disabled={isSubmitting}
                     />
                     <label htmlFor="terms" className="text-gray-700 text-sm">
                       {t.confirmation.terms}
@@ -838,6 +1045,7 @@ const Apply = () => {
                     type="button"
                     onClick={prevStep}
                     className="btn-secondary"
+                    disabled={isSubmitting}
                   >
                     {t.buttons.previous}
                   </button>
@@ -846,18 +1054,29 @@ const Apply = () => {
                   <button
                     type="button"
                     onClick={nextStep}
-                    disabled={!isStepValid(currentStep)}
-                    className="btn-primary ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isStepValid(currentStep) || isSubmitting}
+                    className="btn-primary ml-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                   >
-                    {t.buttons.next}
-                    <ArrowRight size={16} className="ml-2" />
+                    <span>{t.buttons.next}</span>
+                    <ArrowRight size={16} />
                   </button>
                 ) : (
                   <button
                     type="submit"
-                    className="btn-primary ml-auto"
+                    disabled={isSubmitting}
+                    className="btn-primary ml-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                   >
-                    {t.buttons.submit}
+                    {isSubmitting ? (
+                      <>
+                        <Loader className="animate-spin" size={16} />
+                        <span>{t.buttons.submitting}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={16} />
+                        <span>{t.buttons.submit}</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>

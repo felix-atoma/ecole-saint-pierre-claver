@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronRight, Phone, MapPin, Mail, Clock, User, BookOpen, Languages, GraduationCap, Users, Watch, Eye, Plus, Minus } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, ChevronRight, Phone, MapPin, Mail, Clock, User, BookOpen, Languages, GraduationCap, Users, Watch, Eye, Plus, Minus, Search } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { content } from '../data/content';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -16,14 +16,309 @@ export const useAccessibility = () => {
   return context;
 };
 
+// Search data - you can expand this with actual page content
+const searchData = [
+  // Home page
+  { 
+    title: { fr: 'Accueil', en: 'Home' }, 
+    content: { 
+      fr: 'Bienvenue à l\'École Saint Pierre Claver, une institution d\'excellence depuis 1970', 
+      en: 'Welcome to Saint Peter Claver School, an institution of excellence since 1970' 
+    }, 
+    path: '/', 
+    category: 'main'
+  },
+  
+  // Academics
+  { 
+    title: { fr: 'Programmes Académiques', en: 'Academic Programs' }, 
+    content: { 
+      fr: 'Découvrez nos programmes éducatifs de la maternelle au lycée', 
+      en: 'Discover our educational programs from nursery to high school' 
+    }, 
+    path: '/academics', 
+    category: 'academics'
+  },
+  { 
+    title: { fr: 'Maternelle', en: 'Nursery' }, 
+    content: { 
+      fr: 'Programme de maternelle pour les enfants de 2 à 5 ans', 
+      en: 'Nursery program for children aged 2 to 5' 
+    }, 
+    path: '/academics#nursery', 
+    category: 'academics'
+  },
+  { 
+    title: { fr: 'École Primaire', en: 'Primary School' }, 
+    content: { 
+      fr: 'Éducation primaire pour les enfants de 6 à 11 ans', 
+      en: 'Primary education for children aged 6 to 11' 
+    }, 
+    path: '/academics#primary', 
+    category: 'academics'
+  },
+  { 
+    title: { fr: 'Collège', en: 'Middle School' }, 
+    content: { 
+      fr: 'Programme de collège pour les élèves de 12 à 15 ans', 
+      en: 'Middle school program for students aged 12 to 15' 
+    }, 
+    path: '/academics#middle', 
+    category: 'academics'
+  },
+  { 
+    title: { fr: 'Lycée', en: 'High School' }, 
+    content: { 
+      fr: 'Programme de lycée pour les étudiants de 16 à 18 ans', 
+      en: 'High school program for students aged 16 to 18' 
+    }, 
+    path: '/academics#high', 
+    category: 'academics'
+  },
+  { 
+    title: { fr: 'Centre de Langues', en: 'Language Center' }, 
+    content: { 
+      fr: 'Cours de langues pour adultes et professionnels', 
+      en: 'Language courses for adults and professionals' 
+    }, 
+    path: '/academics#languages', 
+    category: 'academics'
+  },
+
+  // Admissions
+  { 
+    title: { fr: 'Admissions', en: 'Admissions' }, 
+    content: { 
+      fr: 'Processus d\'admission et conditions d\'entrée', 
+      en: 'Admission process and entry requirements' 
+    }, 
+    path: '/admissions', 
+    category: 'admissions'
+  },
+  { 
+    title: { fr: 'Processus d\'Admission', en: 'Admission Process' }, 
+    content: { 
+      fr: 'Étapes pour rejoindre notre institution', 
+      en: 'Steps to join our institution' 
+    }, 
+    path: '/admissions#process', 
+    category: 'admissions'
+  },
+  { 
+    title: { fr: 'Conditions d\'Admission', en: 'Admission Requirements' }, 
+    content: { 
+      fr: 'Critères et documents requis pour l\'admission', 
+      en: 'Criteria and required documents for admission' 
+    }, 
+    path: '/admissions#requirements', 
+    category: 'admissions'
+  },
+  { 
+    title: { fr: 'Frais de Scolarité', en: 'Tuition Fees' }, 
+    content: { 
+      fr: 'Tarifs et informations sur les frais de scolarité', 
+      en: 'Pricing and tuition fee information' 
+    }, 
+    path: '/admissions#fees', 
+    category: 'admissions'
+  },
+  { 
+    title: { fr: 'Bourses', en: 'Scholarships' }, 
+    content: { 
+      fr: 'Programmes de bourses et aides financières', 
+      en: 'Scholarship programs and financial aid' 
+    }, 
+    path: '/admissions#scholarships', 
+    category: 'admissions'
+  },
+  { 
+    title: { fr: 'Postuler en Ligne', en: 'Apply Online' }, 
+    content: { 
+      fr: 'Formulaire de candidature en ligne', 
+      en: 'Online application form' 
+    }, 
+    path: '/apply', 
+    category: 'admissions'
+  },
+
+  // Campus Life
+  { 
+    title: { fr: 'Vie du Campus', en: 'Campus Life' }, 
+    content: { 
+      fr: 'Découvrez la vie étudiante et les installations', 
+      en: 'Discover student life and facilities' 
+    }, 
+    path: '/campus', 
+    category: 'campus'
+  },
+  { 
+    title: { fr: 'Installations', en: 'Facilities' }, 
+    content: { 
+      fr: 'Bibliothèque, laboratoires, terrains de sport', 
+      en: 'Library, laboratories, sports fields' 
+    }, 
+    path: '/campus#facilities', 
+    category: 'campus'
+  },
+  { 
+    title: { fr: 'Activités', en: 'Activities' }, 
+    content: { 
+      fr: 'Activités parascolaires et clubs étudiants', 
+      en: 'Extracurricular activities and student clubs' 
+    }, 
+    path: '/campus#activities', 
+    category: 'campus'
+  },
+  { 
+    title: { fr: 'Sports', en: 'Sports' }, 
+    content: { 
+      fr: 'Programmes sportifs et compétitions', 
+      en: 'Sports programs and competitions' 
+    }, 
+    path: '/campus#sports', 
+    category: 'campus'
+  },
+  { 
+    title: { fr: 'Arts & Culture', en: 'Arts & Culture' }, 
+    content: { 
+      fr: 'Programmes artistiques et culturels', 
+      en: 'Artistic and cultural programs' 
+    }, 
+    path: '/campus#arts', 
+    category: 'campus'
+  },
+  { 
+    title: { fr: 'Événements', en: 'Events' }, 
+    content: { 
+      fr: 'Calendrier des événements scolaires', 
+      en: 'School events calendar' 
+    }, 
+    path: '/events', 
+    category: 'campus'
+  },
+
+  // About
+  { 
+    title: { fr: 'À Propos', en: 'About' }, 
+    content: { 
+      fr: 'Notre histoire, mission et vision', 
+      en: 'Our history, mission and vision' 
+    }, 
+    path: '/about', 
+    category: 'about'
+  },
+  { 
+    title: { fr: 'Notre Histoire', en: 'Our History' }, 
+    content: { 
+      fr: 'Histoire de l\'école depuis sa fondation en 1970', 
+      en: 'School history since its foundation in 1970' 
+    }, 
+    path: '/about#history', 
+    category: 'about'
+  },
+  { 
+    title: { fr: 'Mission & Vision', en: 'Mission & Vision' }, 
+    content: { 
+      fr: 'Notre mission éducative et vision pour l\'avenir', 
+      en: 'Our educational mission and vision for the future' 
+    }, 
+    path: '/about#mission', 
+    category: 'about'
+  },
+  { 
+    title: { fr: 'Direction', en: 'Leadership' }, 
+    content: { 
+      fr: 'Équipe de direction et administration', 
+      en: 'Leadership team and administration' 
+    }, 
+    path: '/about#leadership', 
+    category: 'about'
+  },
+  { 
+    title: { fr: 'Corps Enseignant', en: 'Faculty' }, 
+    content: { 
+      fr: 'Nos enseignants qualifiés et dévoués', 
+      en: 'Our qualified and dedicated teachers' 
+    }, 
+    path: '/about#faculty', 
+    category: 'about'
+  },
+  { 
+    title: { fr: 'Anciens Élèves', en: 'Alumni' }, 
+    content: { 
+      fr: 'Réseau des anciens élèves et réussites', 
+      en: 'Alumni network and successes' 
+    }, 
+    path: '/about#alumni', 
+    category: 'about'
+  },
+
+  // Contact
+  { 
+    title: { fr: 'Contact', en: 'Contact' }, 
+    content: { 
+      fr: 'Contactez-nous pour plus d\'informations', 
+      en: 'Contact us for more information' 
+    }, 
+    path: '/contact', 
+    category: 'contact'
+  },
+
+  // Language Courses
+  { 
+    title: { fr: 'Cours de Langues', en: 'Language Courses' }, 
+    content: { 
+      fr: 'Cours de français, anglais et autres langues', 
+      en: 'French, English and other language courses' 
+    }, 
+    path: '/language-courses', 
+    category: 'services'
+  },
+
+  // Portals
+  { 
+    title: { fr: 'Portail Élèves', en: 'Student Portal' }, 
+    content: { 
+      fr: 'Accès au portail étudiant en ligne', 
+      en: 'Access to online student portal' 
+    }, 
+    path: '/portal', 
+    category: 'services'
+  },
+  { 
+    title: { fr: 'Portail Parents', en: 'Parents Portal' }, 
+    content: { 
+      fr: 'Portail parental pour suivre la progression', 
+      en: 'Parent portal to track progress' 
+    }, 
+    path: '/parents-portal', 
+    category: 'services'
+  }
+];
+
+// Category labels
+const categoryLabels = {
+  academics: { fr: 'Académique', en: 'Academic' },
+  admissions: { fr: 'Admissions', en: 'Admissions' },
+  campus: { fr: 'Vie du Campus', en: 'Campus Life' },
+  about: { fr: 'À Propos', en: 'About' },
+  contact: { fr: 'Contact', en: 'Contact' },
+  services: { fr: 'Services', en: 'Services' },
+  main: { fr: 'Principal', en: 'Main' }
+};
+
 // Separate component that uses the accessibility context
 const HeaderContent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const { language } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const t = content[language];
 
   // Use the accessibility context
@@ -66,6 +361,56 @@ const HeaderContent = () => {
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, [language]);
+
+  // Search function
+  const performSearch = (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const lowerCaseQuery = query.toLowerCase();
+    const results = searchData.filter(item => {
+      const title = item.title[language] || item.title.en;
+      const content = item.content[language] || item.content.en;
+      
+      return title.toLowerCase().includes(lowerCaseQuery) || 
+             content.toLowerCase().includes(lowerCaseQuery);
+    });
+
+    setSearchResults(results);
+  };
+
+  // Handle search input change
+  const handleSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    performSearch(query);
+  };
+
+  // Handle search submission
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      performSearch(searchQuery);
+    }
+  };
+
+  // Handle search result click
+  const handleSearchResultClick = (path) => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    navigate(path);
+  };
+
+  // Handle close search
+  const handleCloseSearch = () => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    navigate('/');
+  };
 
   // Top bar navigation
   const topNavigation = {
@@ -233,6 +578,145 @@ const HeaderContent = () => {
 
   return (
     <>
+      {/* Search Overlay */}
+      {isSearchOpen && (
+        <div className={`fixed inset-0 z-50 flex items-start justify-center pt-20 ${
+          highContrast ? 'bg-blue-900/95' : 'bg-white/95'
+        } backdrop-blur-md`}>
+          <div className="container-custom">
+            <div className="max-w-4xl mx-auto">
+              {/* Close Button */}
+              <div className="flex justify-end mb-6">
+                <button
+                  onClick={handleCloseSearch}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                    highContrast
+                      ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-400'
+                      : 'bg-primary-brown text-white hover:bg-primary-dark'
+                  }`}
+                >
+                  <X size={20} />
+                  <span>{language === 'fr' ? 'Fermer' : 'Close'}</span>
+                </button>
+              </div>
+
+              {/* Search Box */}
+              <form onSubmit={handleSearch} className="relative mb-8">
+                <div className={`relative border-b-2 ${
+                  highContrast ? 'border-yellow-400' : 'border-primary-brown'
+                } pb-3`}>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    placeholder={language === 'fr' ? 'Tapez ici et chercher...' : 'Type here and search...'}
+                    className={`w-full text-2xl font-light bg-transparent border-none outline-none placeholder:font-light ${
+                      highContrast 
+                        ? 'text-yellow-300 placeholder-yellow-300/60' 
+                        : 'text-gray-800 placeholder-gray-400'
+                    }`}
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className={`absolute right-0 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-colors duration-300 ${
+                      highContrast
+                        ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-400'
+                        : 'bg-primary-brown text-white hover:bg-primary-dark'
+                    }`}
+                  >
+                    <Search size={24} />
+                  </button>
+                </div>
+              </form>
+
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <div className="max-h-96 overflow-y-auto">
+                  <h3 className={`text-lg font-semibold mb-4 ${
+                    highContrast ? 'text-yellow-300' : 'text-gray-700'
+                  }`}>
+                    {language === 'fr' ? 'Résultats de recherche' : 'Search Results'} ({searchResults.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {searchResults.map((result, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSearchResultClick(result.path)}
+                        className={`w-full text-left p-4 rounded-lg transition-all duration-300 hover:shadow-lg border ${
+                          highContrast
+                            ? 'bg-blue-800 border-yellow-400 hover:bg-blue-700'
+                            : 'bg-white border-gray-200 hover:border-primary-brown'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className={`font-semibold text-lg ${
+                            highContrast ? 'text-yellow-300' : 'text-primary-brown'
+                          }`}>
+                            {result.title[language] || result.title.en}
+                          </h4>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            highContrast
+                              ? 'bg-yellow-500 text-blue-900'
+                              : 'bg-primary-cream text-primary-brown'
+                          }`}>
+                            {categoryLabels[result.category][language]}
+                          </span>
+                        </div>
+                        <p className={`text-sm ${
+                          highContrast ? 'text-yellow-200' : 'text-gray-600'
+                        }`}>
+                          {result.content[language] || result.content.en}
+                        </p>
+                        <div className={`text-xs mt-2 ${
+                          highContrast ? 'text-yellow-300' : 'text-primary-brown'
+                        }`}>
+                          {result.path}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No Results Message */}
+              {searchQuery && searchResults.length === 0 && (
+                <div className={`text-center py-8 ${
+                  highContrast ? 'text-yellow-300' : 'text-gray-600'
+                }`}>
+                  <p className="text-lg mb-2">
+                    {language === 'fr' ? 'Aucun résultat trouvé pour' : 'No results found for'}
+                  </p>
+                  <p className={`font-semibold text-xl ${
+                    highContrast ? 'text-yellow-400' : 'text-primary-brown'
+                  }`}>
+                    "{searchQuery}"
+                  </p>
+                  <p className="text-sm mt-4">
+                    {language === 'fr' 
+                      ? 'Essayez avec d\'autres mots-clés ou vérifiez l\'orthographe'
+                      : 'Try different keywords or check spelling'
+                    }
+                  </p>
+                </div>
+              )}
+
+              {/* Search Hint */}
+              {!searchQuery && (
+                <p className={`mt-4 text-sm ${
+                  highContrast ? 'text-yellow-300' : 'text-gray-600'
+                }`}>
+                  {language === 'fr' 
+                    ? 'Appuyez sur Entrée pour rechercher ou cliquez sur Fermer pour revenir à l\'accueil'
+                    : 'Press Enter to search or click Close to return home'
+                  }
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Navigation Bar */}
       <div className={`${highContrast ? 'bg-blue-800 text-yellow-300' : 'bg-primary-brown text-white'} py-2 border-b ${highContrast ? 'border-yellow-400' : 'border-primary-brown/20'}`}>
         <div className="container-custom">
@@ -332,7 +816,7 @@ const HeaderContent = () => {
       </div>
 
       {/* Main Navigation Bar */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-md border-b ${
+      <header className={`sticky top-0 z-40 transition-all duration-300 backdrop-blur-md border-b ${
         isScrolled ? 'shadow-xl' : 'shadow-lg'
       } ${highContrast ? 'bg-blue-900/95 border-yellow-400' : 'bg-white/95 border-gray-100'}`}>
         <div className="container-custom">
@@ -516,6 +1000,19 @@ const HeaderContent = () => {
 
             {/* CTA Section */}
             <div className="hidden lg:flex items-center space-x-3 flex-shrink-0">
+              {/* Search Button */}
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-105 ${
+                  highContrast
+                    ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-400'
+                    : 'bg-primary-cream text-primary-brown hover:bg-primary-brown hover:text-white'
+                }`}
+                title={language === 'fr' ? 'Rechercher' : 'Search'}
+              >
+                <Search size={18} />
+              </button>
+
               {/* Apply Now Button */}
               <Link
                 to="/apply"
@@ -542,6 +1039,19 @@ const HeaderContent = () => {
 
             {/* Mobile menu button */}
             <div className="xl:hidden flex items-center space-x-3">
+              {/* Search Button for Mobile */}
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className={`p-2.5 rounded-lg transition-all duration-300 ${
+                  highContrast
+                    ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-400'
+                    : 'bg-primary-cream text-primary-brown hover:bg-primary-brown hover:text-white'
+                }`}
+                title={language === 'fr' ? 'Rechercher' : 'Search'}
+              >
+                <Search size={18} />
+              </button>
+
               {/* Mobile Clock */}
               <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border ${
                 highContrast ? 'bg-blue-700 border-yellow-400' : 'bg-gray-100 border-gray-200'

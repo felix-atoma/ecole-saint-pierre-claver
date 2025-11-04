@@ -1,13 +1,14 @@
 ﻿import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../contexts/LanguageContext'
-import { Mail, Phone, MapPin, Send, Clock, Users, BookOpen, Calendar, User } from 'lucide-react'
+import { Mail, Phone, MapPin, Send, Clock, Users, BookOpen, Calendar, User, AlertCircle, CheckCircle } from 'lucide-react'
 import SEO from '../components/SEO'
-import { useNavigate } from 'react-router-dom' // Add this import
+import { useNavigate } from 'react-router-dom'
+import { messageService } from '../services/messageService'
 
 const Contact = () => {
   const { language } = useLanguage()
-  const navigate = useNavigate() // Add this hook
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,6 +17,8 @@ const Contact = () => {
     studentGrade: '',
     inquiryType: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' })
 
   const contactContent = {
     fr: {
@@ -30,6 +33,7 @@ const Contact = () => {
         studentGrade: "Niveau de l'élève",
         inquiryType: "Type de demande",
         submit: "Envoyer le Message",
+        submitting: "Envoi en cours...",
         selectGrade: "Sélectionnez le niveau",
         selectInquiry: "Sélectionnez le type",
         grades: {
@@ -85,6 +89,10 @@ const Contact = () => {
             a: "Notre ratio moyen est de 25 élèves par classe pour un enseignement personnalisé."
           }
         ]
+      },
+      messages: {
+        success: "Message envoyé avec succès! Nous vous répondrons dans les plus brefs délais.",
+        error: "Erreur lors de l'envoi du message. Veuillez réessayer."
       }
     },
     en: {
@@ -99,6 +107,7 @@ const Contact = () => {
         studentGrade: "Student Grade Level",
         inquiryType: "Inquiry Type",
         submit: "Send Message",
+        submitting: "Sending...",
         selectGrade: "Select grade level",
         selectInquiry: "Select inquiry type",
         grades: {
@@ -154,25 +163,49 @@ const Contact = () => {
             a: "Our average ratio is 25 students per class for personalized teaching."
           }
         ]
+      },
+      messages: {
+        success: "Message sent successfully! We will get back to you as soon as possible.",
+        error: "Error sending message. Please try again."
       }
     }
   }
 
   const t = contactContent[language]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Form submitted:', formData)
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      subject: '',
-      message: '',
-      studentGrade: '',
-      inquiryType: ''
-    })
+    setIsSubmitting(true)
+    setSubmitStatus({ type: '', message: '' })
+
+    try {
+      const response = await messageService.createMessage(formData)
+      
+      if (response.success) {
+        setSubmitStatus({ 
+          type: 'success', 
+          message: t.messages.success 
+        })
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: '',
+          studentGrade: '',
+          inquiryType: ''
+        })
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      setSubmitStatus({ 
+        type: 'error', 
+        message: t.messages.error 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -186,19 +219,15 @@ const Contact = () => {
   const handleQuickAction = (action) => {
     switch (action) {
       case 'admission':
-        // Navigate to admissions page
         navigate('/admissions')
         break
       case 'visit':
-        // Navigate to campus page or open tour scheduling
         navigate('/campus')
         break
       case 'prospectus':
-        // Download prospectus logic
         window.open('/documents/prospectus.pdf', '_blank')
         break
       case 'portal':
-        // Navigate to parents portal
         navigate('/parents-portal')
         break
       default:
@@ -226,7 +255,7 @@ const Contact = () => {
       action: 'prospectus' 
     },
     { 
-      icon: User,  // Changed from Calendar to User for portal
+      icon: User,
       label: t.quickActions.portal, 
       color: "bg-orange-500", 
       action: 'portal' 
@@ -364,6 +393,29 @@ const Contact = () => {
                     }
                   </p>
                 </div>
+
+                {/* Status Messages */}
+                {submitStatus.message && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`m-6 p-4 rounded-lg flex items-center space-x-3 ${
+                      submitStatus.type === 'success' 
+                        ? 'bg-green-50 border border-green-200' 
+                        : 'bg-red-50 border border-red-200'
+                    }`}
+                  >
+                    {submitStatus.type === 'success' ? (
+                      <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
+                    ) : (
+                      <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+                    )}
+                    <p className={submitStatus.type === 'success' ? 'text-green-700' : 'text-red-700'}>
+                      {submitStatus.message}
+                    </p>
+                  </motion.div>
+                )}
+
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -375,6 +427,7 @@ const Contact = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent transition-all duration-300"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -386,6 +439,7 @@ const Contact = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent transition-all duration-300"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -398,6 +452,8 @@ const Contact = () => {
                         value={formData.studentGrade}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent transition-all duration-300"
+                        required
+                        disabled={isSubmitting}
                       >
                         <option value="">{t.form.selectGrade}</option>
                         {Object.entries(t.form.grades).map(([key, value]) => (
@@ -412,6 +468,8 @@ const Contact = () => {
                         value={formData.inquiryType}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent transition-all duration-300"
+                        required
+                        disabled={isSubmitting}
                       >
                         <option value="">{t.form.selectInquiry}</option>
                         {Object.entries(t.form.inquiries).map(([key, value]) => (
@@ -430,6 +488,7 @@ const Contact = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent transition-all duration-300"
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
 
@@ -442,17 +501,28 @@ const Contact = () => {
                       rows="6"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-brown focus:border-transparent transition-all duration-300 resize-none"
                       required
+                      disabled={isSubmitting}
                     ></textarea>
                   </div>
 
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                    whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                     type="submit"
-                    className="btn-primary w-full flex items-center justify-center space-x-3 py-4 text-lg font-semibold"
+                    disabled={isSubmitting}
+                    className="btn-primary w-full flex items-center justify-center space-x-3 py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send size={24} />
-                    <span>{t.form.submit}</span>
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>{t.form.submitting}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={24} />
+                        <span>{t.form.submit}</span>
+                      </>
+                    )}
                   </motion.button>
                 </form>
               </div>
